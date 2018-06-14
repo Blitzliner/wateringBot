@@ -12,6 +12,7 @@ void utils_init(Stream &port, uint16_t baudrate = SERIAL_BAUD_115200) {
    //Serial.println("okay");
 }
 */
+#define CLAMP(val, min, max) val = ((val)<(min)?(min):((val)>(max)?(max):(val)))
 #ifdef DEBUG_ENABLED
   #define DEBUG(x, val) Serial.print(F(x)); Serial.println(val);
 #else

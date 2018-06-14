@@ -1,64 +1,17 @@
-#define LCD 1 // 0: LCD4884, 1: SSD1306 I2C (Gosear 0,96 Zoll OLED)
-
-#if LCD == 1
-//#include <Adafruit_GFX.h>
-//#include <Adafruit_SPITFT.h>
-//#include <Adafruit_SPITFT_Macros.h>
-//#include <gfxfont.h>
-//#include <Adafruit_SSD1306.h>
-//#define OLED_RESET 4
 #include "U8glib.h"
 U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE|U8G_I2C_OPT_DEV_0);
-//Adafruit_SSD1306 disp(OLED_RESET);
-#elif LCD == 0
-#include <LCD4884.h>
-#endif
 
 namespace Display {
-enum DISPLAY_LINE_TAG {
-  LINE_1 = 1,
-  LINE_2,
-  LINE_3,
-  LINE_4,
-  LINE_5,
-  LINE_6,
-  LINE_7,
-};
-#if LCD == 0
-  #define LCD_BACKLIGHT_PIN  7
-  
-  void Clear() {
-    lcd.LCD_clear();
-  }
-  void Init() {
-    pinMode(LCD_BACKLIGHT_PIN, OUTPUT);
-    lcd.LCD_init();
-    digitalWrite(LCD_BACKLIGHT_PIN, HIGH);
-    Clear();
-  }
-  
-  void Print(uint8_t x, uint8_t y, char text[], uint8_t fontSize = 0, uint8_t fontType = 0) {
-    static uint8_t type = 0;
-    if (fontType == 0)
-      type = MENU_NORMAL;
-    else if (fontType == 1) 
-       type = MENU_HIGHLIGHT;
-  
-    if (fontSize == 1)
-      lcd.LCD_write_string_big(x, y, text, type);
-    else
-      lcd.LCD_write_string(x, y, text, type);
-  }
-  void Sleep() {
+    enum DISPLAY_LINE_TAG {
+        LINE_1 = 1,
+        LINE_2,
+        LINE_3,
+        LINE_4,
+        LINE_5,
+        LINE_6,
+        LINE_7,
+    };
     
-  }
-  void WakeUp() {
-    
-  }
-#elif LCD == 1
-  void Clear() {
-//    disp.clearDisplay();
-  }
   void Init() {
     if ( u8g.getMode() == U8G_MODE_R3G3B2 ) {
       u8g.setColorIndex(255);     // white
@@ -69,15 +22,16 @@ enum DISPLAY_LINE_TAG {
     else if ( u8g.getMode() == U8G_MODE_BW ) {
       u8g.setColorIndex(1);        
     }
-    //u8g.firstPage();
-    Clear();
   }
+
   void Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2){
     u8g.drawLine(x1, y1, x2, y2);
   }
+
   void Box(uint8_t x, uint8_t y, uint8_t w, uint8_t h){
     u8g.drawBox(x, y, w, h);
   }
+
   void Print(uint8_t x, uint8_t y, const char text[], uint8_t fontSize = 0, uint8_t fontType = 0) {
     if (fontSize == 0) {
       if (fontType == 0) {
@@ -97,16 +51,9 @@ enum DISPLAY_LINE_TAG {
       u8g.drawStr(x, y*20, text);
     }
   }
+
   void PrintXY(uint8_t pX, uint8_t pY, char text[]) {
     u8g.setFont(u8g_font_6x10);
     u8g.drawStr(pX, pY, text);
   }
-  
-  void Sleep() {
-    
-  }
-  void WakeUp() {
-    
-  }
-#endif
 }
