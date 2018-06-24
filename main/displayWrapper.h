@@ -56,4 +56,11 @@ namespace Display {
     u8g.setFont(u8g_font_6x10);
     u8g.drawStr(pX, pY, text);
   }
+
+  void Sleep() {
+      u8g.sleepOn();
+  }
+  void Awake() {
+      u8g.sleepOff();
+  }
 }

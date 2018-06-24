@@ -120,7 +120,6 @@ class DS3231 {
 			// has been activated.
 
 		// Oscillator functions
-
 		void enableOscillator(bool TF, bool battery, byte frequency); 
 			// turns oscillator on or off. True is on, false is off.
 			// if battery is true, turns on even for battery-only operation,
@@ -139,8 +138,8 @@ class DS3231 {
 			// The OSF is cleared by function setSecond();.
 
 	private:
-    byte _readByte(uint8_t address, uint8_t regist);
-    void _writeByte(uint8_t address, uint8_t regist, uint8_t msg);
+        byte _readByte(uint8_t address, uint8_t regist);
+        void _writeByte(uint8_t address, uint8_t regist, uint8_t msg);
     
 		byte decToBcd(byte val); 
 			// Convert normal decimal numbers to binary coded decimal

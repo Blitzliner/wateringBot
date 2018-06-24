@@ -2,8 +2,16 @@
 #define TIME_H
 
 #include "DS3231.h"
+#include "utils.h"
 
+/*************************************************/
+/*         LOCAL VARIABLE DECLARATION            */
+/*************************************************/
 DS3231 Clock;
+
+/*************************************************/
+/*              TYPE DECLARATION                 */
+/*************************************************/
 typedef struct TimeType_Tag {
   byte second;
   byte minute;
@@ -15,14 +23,55 @@ typedef struct TimeType_Tag {
   float temperature; 
 } TimeType;
 
-#define EXPONENTIAL_FILTER(last, new, alpha) last=(((last * alpha) + new * (1.0 - alpha)))
+/*************************************************/
+/*         LOCAL FUNCTION DECLARATION            */
+/*************************************************/
+static void printTime(TimeType* t);
+static void parseCompileTime(TimeType* t);
 
-void initTime(TimeType& time) {
-  Wire.begin();
-  time.temperature = Clock.getTemperature();
+/*************************************************/
+/*         GLOBAL FUNCTION DECLARATION           */
+/*************************************************/
+void Time_Init(TimeType& time);
+void SetTime(TimeType* t);
+void GetTime(TimeType *t);
+
+/*************************************************/
+/*         LOCAL FUNCTION DEFINITIONS            */
+/*************************************************/
+void printTime(TimeType* t) {
+    char tempBuff[6];
+    char totalBuff[30];
+    dtostrf(t->temperature, 4, 1, tempBuff);
+    sprintf(totalBuff, "%02d:%02d:%02d, %02d.%02d.%04d; %s C\n", t->hour, t->minute, t->second, t->day, t->month, t->year + 2000, tempBuff);
+    DEBUG(totalBuff);
 }
 
-void setTime(TimeType* t) {
+void parseCompileTime(TimeType* t) {
+    char s_month[5];
+    const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+    uint16_t year;
+    sscanf(__DATE__, "%s %c %d", s_month, &t->day, &year);
+    t->year = (char)(year - 2000);//1970;//2000;
+    t->month = (strstr(month_names, s_month) - month_names) / 3 + 1;
+    DEBUG((strstr(month_names, s_month) - month_names));
+    sscanf(__TIME__, "%2hhd %*c %2hhd %*c %2hhd", &t->hour, &t->minute, &t->second);
+}
+
+/*************************************************/
+/*         GLOBAL FUNCTION DEFINITIONS            */
+/*************************************************/
+void Time_Init(TimeType& time) {
+    Wire.begin();
+    time.temperature = Clock.getTemperature();
+    parseCompileTime(&time);
+    printTime(&time);
+    #if defined(FIRST_RUN)
+      SetTime(&time);
+    #endif
+}
+
+void SetTime(TimeType* t) {
   Clock.setSecond(t->second);//Set the second 
   Clock.setMinute(t->minute);//Set the minute 
   Clock.setHour(t->hour);  //Set the hour 
@@ -32,8 +81,7 @@ void setTime(TimeType* t) {
   Clock.setYear(t->year);// - 2000);  //Set the year (Last two digits of the year)
 }
 
-void readTime(TimeType *t) {
-  //Clock.getTime(t->year, t->month, t->day, t->dow, t->hour, t->minute, t->second);
+void GetTime(TimeType *t) {
   bool h12, PM, Century;
   t->hour = Clock.getHour(h12, PM); 
   t->minute = Clock.getMinute(); 
@@ -43,40 +91,6 @@ void readTime(TimeType *t) {
   t->day = Clock.getDate(); 
   EXPONENTIAL_FILTER(t->temperature, Clock.getTemperature(), 0.98);
 }
-
-void printTime(TimeType* t) {
-  char tempBuff[6];
-  char totalBuff[30];
-  dtostrf(t->temperature, 4, 1, tempBuff);
-  sprintf(totalBuff, "%02d:%02d:%02d, %02d.%02d.%04d; %s C\n", t->hour, t->minute, t->second, t->day, t->month, t->year + 2000, tempBuff); 
-  #ifdef DEBUG_ENABLED
-  Serial.write(totalBuff);
-  #endif
-}
-
-void parseCompileTime(TimeType* t){
-    char s_month[5];
-    const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
-    uint16_t year;
-    sscanf(__DATE__, "%s %c %d", s_month, &t->day, &year);
-    t->year = year - 2000;//1970;//2000;
-    t->month = (strstr(month_names, s_month) - month_names)/3 + 1;
-    #ifdef DEBUG_ENABLED
-    Serial.print("DEBUG: ");
-    Serial.println((strstr(month_names, s_month) - month_names));
-    #endif
-    sscanf(__TIME__, "%2hhd %*c %2hhd %*c %2hhd", &t->hour, &t->minute, &t->second);
-}  
-
-
-/*uint16_t getSmallTimeStamp(TimeType* t) {
-  uint16_t totalTime = 0;
-  totalTime = t->second;
-  totalTime = t->minute * 60;
-  totalTime = t->hour * 60 * 60;
-  return totalTime;
-}
-*/
 
 /*
   if (Century) {      // Won't need this for 89 years.

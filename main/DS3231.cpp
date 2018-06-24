@@ -23,7 +23,6 @@ void DS3231::_writeByte(uint8_t address, uint8_t regist, uint8_t msg) {
 
 void DS3231::getTime(byte& year, byte& month, byte& date, byte& DoW, byte& hour, byte& minute, byte& second) {
 	byte tempBuffer;
-	/*bool PM;*/
 	bool h12;
 
 	Wire.beginTransmission(CLOCK_ADDRESS);
@@ -51,19 +50,19 @@ void DS3231::getTime(byte& year, byte& month, byte& date, byte& DoW, byte& hour,
 }
 
 byte DS3231::getSecond() {
-  return bcdToDec(_readByte(CLOCK_ADDRESS, 0x00));
+    return bcdToDec(_readByte(CLOCK_ADDRESS, 0x00));
 }
 
 byte DS3231::getMinute() {
-  return bcdToDec(_readByte(CLOCK_ADDRESS, 0x01));
+    return bcdToDec(_readByte(CLOCK_ADDRESS, 0x01));
 }
 
 byte DS3231::getHour(bool& h12, bool& PM) {
-	byte temp_buffer;
-	byte hour;
-  temp_buffer = _readByte(CLOCK_ADDRESS, 0x02);
-	h12 = temp_buffer & 0b01000000;
-	if (h12) {
+    byte temp_buffer;
+    byte hour;
+    temp_buffer = _readByte(CLOCK_ADDRESS, 0x02);
+    h12 = temp_buffer & 0b01000000;
+    if (h12) {
 		PM = temp_buffer & 0b00100000;
 		hour = bcdToDec(temp_buffer & 0b00011111);
 	} else {
@@ -73,18 +72,18 @@ byte DS3231::getHour(bool& h12, bool& PM) {
 }
 
 byte DS3231::getDoW() {
-  return bcdToDec(_readByte(CLOCK_ADDRESS, 0x03));
+    return bcdToDec(_readByte(CLOCK_ADDRESS, 0x03));
 }
 
 byte DS3231::getDate() {
-  return bcdToDec(_readByte(CLOCK_ADDRESS, 0x04));
+    return bcdToDec(_readByte(CLOCK_ADDRESS, 0x04));
 }
 
 byte DS3231::getMonth(bool& Century) {
-	byte temp_buffer;
-  temp_buffer = _readByte(CLOCK_ADDRESS, 0x05);
-	Century = temp_buffer & 0b10000000;
-	return (bcdToDec(temp_buffer & 0b01111111)) ;
+    byte temp_buffer;
+    temp_buffer = _readByte(CLOCK_ADDRESS, 0x05);
+    Century = temp_buffer & 0b10000000;
+    return (bcdToDec(temp_buffer & 0b01111111)) ;
 }
 
 byte DS3231::getYear() {
@@ -95,13 +94,6 @@ uint8_t DS3231::_decodeY(uint8_t value) {
   return decoded;
 }
 void DS3231::setSecond(byte Second) {
-	// Sets the seconds 
-	// This function also resets the Oscillator Stop Flag, which is set
-	// whenever power is interrupted.
-	/*Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x00));
-	Wire.write(decToBcd(Second));	
-	Wire.endTransmission();*/
   _writeByte(CLOCK_ADDRESS, 0x00, decToBcd(Second));
 	// Clear OSF flag
 	byte temp_buffer = readControlByte(1);
@@ -109,85 +101,44 @@ void DS3231::setSecond(byte Second) {
 }
 
 void DS3231::setMinute(byte Minute) {
-	// Sets the minutes 
-	/*Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x01));
-	Wire.write(decToBcd(Minute));	
-	Wire.endTransmission();*/
   _writeByte(CLOCK_ADDRESS, 0x01, decToBcd(Minute));
 }
 
 void DS3231::setHour(byte Hour) {
 	// Sets the hour, without changing 12/24h mode.
 	// The hour must be in 24h format.
-
 	bool h12;
+    h12 = _readByte(CLOCK_ADDRESS, 0x02) & 0b01000000;
 
-	// Start by figuring out what the 12/24 mode is
-	/*Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x02));
-	Wire.endTransmission();
-	Wire.requestFrom(CLOCK_ADDRESS, 1);
-	h12 = (Wire.read() & 0b01000000);
- */
-  h12 = _readByte(CLOCK_ADDRESS, 0x02) & 0b01000000;
-	// if h12 is true, it's 12h mode; false is 24h.
+    if (h12) {
+	    // 12 hour
+	    if (Hour > 12) {
+		    Hour = decToBcd(Hour-12) | 0b01100000;
+	    } else {
+		    Hour = decToBcd(Hour) & 0b11011111;
+	    }
+    } else {
+	    // 24 hour
+	    Hour = decToBcd(Hour) & 0b10111111;
+    }
 
-	if (h12) {
-		// 12 hour
-		if (Hour > 12) {
-			Hour = decToBcd(Hour-12) | 0b01100000;
-		} else {
-			Hour = decToBcd(Hour) & 0b11011111;
-		}
-	} else {
-		// 24 hour
-		Hour = decToBcd(Hour) & 0b10111111;
-	}
-
-	/*Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x02));
-	Wire.write(Hour);
-	Wire.endTransmission();*/
   _writeByte(CLOCK_ADDRESS, 0x02, Hour);
 }
 
 void DS3231::setDoW(byte DoW) {
-	// Sets the Day of Week
-	/*Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x03));
-	Wire.write(decToBcd(DoW));	
-	Wire.endTransmission();*/
- _writeByte(CLOCK_ADDRESS, 0x03, decToBcd(DoW));
+    _writeByte(CLOCK_ADDRESS, 0x03, decToBcd(DoW));
 }
 
 void DS3231::setDate(byte Date) {
-	// Sets the Date
-/*	Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x04));
-	Wire.write(decToBcd(Date));	
-	Wire.endTransmission();
- */
- _writeByte(CLOCK_ADDRESS, 0x04, decToBcd(Date));
+    _writeByte(CLOCK_ADDRESS, 0x04, decToBcd(Date));
 }
 
 void DS3231::setMonth(byte Month) {
-	// Sets the month
-	/*Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x05));
-	Wire.write(decToBcd(Month));	
-	Wire.endTransmission();*/
- 
- _writeByte(CLOCK_ADDRESS, 0x05, decToBcd(Month));
+    _writeByte(CLOCK_ADDRESS, 0x05, decToBcd(Month));
 }
 
 void DS3231::setYear(byte Year) {
-	// Sets the year
-	/*Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x06));
-	Wire.write(decToBcd(Year));// - 30));	
-	Wire.endTransmission();*/
-  _writeByte(CLOCK_ADDRESS, 0x06, decToBcd(Year));
+    _writeByte(CLOCK_ADDRESS, 0x06, decToBcd(Year));
 }
 
 void DS3231::setClockMode(bool h12) {
@@ -216,11 +167,7 @@ void DS3231::setClockMode(bool h12) {
 		temp_buffer = temp_buffer & 0b10111111;
 	}
 
-	// Write the byte
-	Wire.beginTransmission(CLOCK_ADDRESS);
-	Wire.write(uint8_t(0x02));
-	Wire.write(temp_buffer);
-	Wire.endTransmission();
+    _writeByte(CLOCK_ADDRESS, 0x02, temp_buffer);
 }
 
 float DS3231::getTemperature() {

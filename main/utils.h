@@ -12,11 +12,21 @@ void utils_init(Stream &port, uint16_t baudrate = SERIAL_BAUD_115200) {
    //Serial.println("okay");
 }
 */
+
 #define CLAMP(val, min, max) val = ((val)<(min)?(min):((val)>(max)?(max):(val)))
+
+#define EXPONENTIAL_FILTER(last, new, alpha) last=(((last * alpha) + new * (1.0 - alpha)))
+
 #ifdef DEBUG_ENABLED
-  #define DEBUG(x, val) Serial.print(F(x)); Serial.println(val);
+    #define DEBUG_INIT(baudrate)    Serial.begin(baudrate)
+    #define DEBUG_OPT(str)          Serial.println(F(str))
+    #define DEBUG_VALUE(val)        Serial.println(val)
+    #define DEBUG(str)              Serial.println(str)
 #else
-  #define DEBUG(x, val) 
+    #define DEBUG_INIT(baudrate) 
+    #define DEBUG_OPT(str)  
+    #define DEBUG_VALUE(val) 
+    #define DEBUG(str)
 #endif
 
 #endif /* UTILS_H */

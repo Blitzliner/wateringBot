@@ -3,6 +3,9 @@
 
 #include "Time.h"
 
+//#define FIRST_RUN /* disable after first upload!! */
+//#define DEBUG_ENABLED /* disable if debug not used */
+
 #define CHARS_MAX 10
 #define NVM_INVALID_ADDRESS 1024
 #define NVM_TIME_HOUR_ADDRESS 2000
@@ -48,13 +51,14 @@ struct TimeValueType {
 };
 
 struct DisplayType {
-  /*ValueType onTime;*/
+    ValueType Sleep;
+    ValueType ScreenSaver;
 };
 
 struct WateringBoy_DataType{
   ValueType out[WATER_OUTLET_MAX][SETTING_OUT_MAX];
-  DisplayType display;
-  TimeValueType time;
+  DisplayType Display;
+  TimeValueType Time;
 } WB;
 
 void setSetting(ValueType* val, int32_t value, int32_t step, int32_t min, int32_t max, const char unit[], const char name[], uint16_t address) {
@@ -67,42 +71,45 @@ void setSetting(ValueType* val, int32_t value, int32_t step, int32_t min, int32_
   strcpy(val->name, name);
 }
 
-void init_time(TimeType* time) {
-  setSetting(&WB.time.hour,  time->hour,   1,  0,    23,   "h",    "Hour", NVM_TIME_HOUR_ADDRESS);
-  setSetting(&WB.time.min,   time->minute, 1,  0,    59, "min", "Minutes", NVM_TIME_MIN_ADDRESS);
+void SettingTime_Init(TimeType* time) {
+  setSetting(&WB.Time.hour,  time->hour,   1,  0,    23,   "h",    "Hour", NVM_TIME_HOUR_ADDRESS);
+  setSetting(&WB.Time.min,   time->minute, 1,  0,    59, "min", "Minutes", NVM_TIME_MIN_ADDRESS);
   
-  setSetting(&WB.time.year,  time->year,   1,  0,    99,   "a",    "Year", NVM_TIME_YEAR_ADDRESS);
-  setSetting(&WB.time.month, time->month,  1,  1,    12,   "m",   "Month", NVM_TIME_MONTH_ADDRESS);
-  setSetting(&WB.time.day,   time->day,    1,  1,    31,   "d",     "Day", NVM_TIME_DAY_ADDRESS);
+  setSetting(&WB.Time.year,  time->year,   1,  0,    99,   "a",    "Year", NVM_TIME_YEAR_ADDRESS);
+  setSetting(&WB.Time.month, time->month,  1,  1,    12,   "m",   "Month", NVM_TIME_MONTH_ADDRESS);
+  setSetting(&WB.Time.day,   time->day,    1,  1,    31,   "d",     "Day", NVM_TIME_DAY_ADDRESS);
 }
-void init_setting() {
-  /* Outlet 1 */
-  setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_AMOUNT], 200, 50, 10, 1000,  "ml",  "Amount", 0);
-  setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_CYCLE],   24,  3,  3, 5040,   "h",   "Cycle", 4);
-  setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 8);
-  setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 12);
-  setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
+void Setting_Init() {
+    /* init display settings */
+    setSetting(&WB.Display.ScreenSaver, 10, 1, 5, 60, "s", "Saver", 64);
+    setSetting(&WB.Display.Sleep, 20, 5, 10, 3600, "s", "Standby", 68);
+    /* Outlet 1 */
+    setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_AMOUNT], 200, 50, 10, 1000,  "ml",  "Amount", 0);
+    setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_CYCLE],   24,  3,  3, 5040,   "h",   "Cycle", 4);
+    setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 8);
+    setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 12);
+    setSetting(&WB.out[WATER_OUTLET_1][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
 
-  /* Outlet 2 */
-  setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_AMOUNT], 500, 50, 10, 1000,  "ml",  "Amount", 16);
-  setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_CYCLE],   24,  3,  3, 5040,   "h",   "Cycle", 20);
-  setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 24);
-  setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 28);
-  setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
+    /* Outlet 2 */
+    setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_AMOUNT], 500, 50, 10, 1000,  "ml",  "Amount", 16);
+    setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_CYCLE],   24,  3,  3, 5040,   "h",   "Cycle", 20);
+    setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 24);
+    setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 28);
+    setSetting(&WB.out[WATER_OUTLET_2][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
 
-  /* Outlet 3 */
-  setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_AMOUNT], 300, 50, 10, 1000,  "ml",  "Amount", 32);
-  setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_CYCLE],   48,  3,  3, 5040,   "h",   "Cycle", 36);
-  setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 40);
-  setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 44);
-  setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
+    /* Outlet 3 */
+    setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_AMOUNT], 300, 50, 10, 1000,  "ml",  "Amount", 32);
+    setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_CYCLE],   48,  3,  3, 5040,   "h",   "Cycle", 36);
+    setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 40);
+    setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 44);
+    setSetting(&WB.out[WATER_OUTLET_3][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
   
-  /* Outlet 4 */
-  setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_AMOUNT], 200, 50, 10, 1000,  "ml",  "Amount", 48);
-  setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_CYCLE],  168,  3,  3, 5040,   "h",   "Cycle", 52);
-  setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 56);
-  setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 60);
-  setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
+    /* Outlet 4 */
+    setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_AMOUNT], 200, 50, 10, 1000,  "ml",  "Amount", 48);
+    setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_CYCLE],  168,  3,  3, 5040,   "h",   "Cycle", 52);
+    setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_DAYTIME], 17,  1,  0,   23, "Uhr", "Daytime", 56);
+    setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_OFFSET],   0, 20,  0,  500,  "ml",  "Offset", 60);
+    setSetting(&WB.out[WATER_OUTLET_4][SETTING_OUT_TESTRUN],  0,  1,  0,    1,    "", "Testrun", NVM_INVALID_ADDRESS);
 }
 
 #endif /*TYPES_H*/

@@ -47,6 +47,8 @@ typedef struct InputData_Tag {
     TimeType* Time_p;
 } InputData_Type;
 
+enum DISPLAY_MODE { DISPLAY_NORMAL, DISPLAY_SCREENSAVER, DISPLAY_STANDBY, DISPLAY_INIT };
+
 /*************************************************/
 /*         LOCAL VARIABLE DECLARATION            */
 /*************************************************/
@@ -60,7 +62,6 @@ static void setCursor(void);
 static void showMenu(const char menuEntries[][CHARS_MAX], uint8_t totalEntries, const char header[], boolean subMenu = true);
 static void ShowCursor_Main(void);
 static void showOverview(void);
-static void showHeader(const char header[]);
 static void showValue(uint8_t posX, uint8_t posY, ValueType* value);
 static void showDisplayDetail(void);
 static void showTimeDetail(void);
@@ -76,18 +77,14 @@ void ISR_PRESS(void);
 /*         GLOBAL FUNCTION DECLARATION           */
 /*************************************************/
 void Display_Init(TimeType* time_p);
-void Display_Main(boolean screensaver_bo);
+void Display_Main(DISPLAY_MODE displayMode_e);
 void ScreenSaver_Main(TimeType* time_p);
 
 /*************************************************/
 /*         LOCAL FUNCTION DEFINITIONS            */
 /*************************************************/
-static void showHeader(const char header[]) {
-    Display::Print(HmiData_s.Menu_s.X_u8, 1, header);
-}
-
 static void showMenu(const char menuEntries[][CHARS_MAX], uint8_t totalEntries, const char header[], boolean subMenu) {
-    showHeader(header);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, header);
     if (subMenu == true) {
         Display::Print(HmiData_s.Menu_s.X_u8, 2, Names::Back);
         for (uint8_t idx = 0; idx < totalEntries; idx++){
@@ -111,7 +108,7 @@ static void setCursor(void) {
     case Menu::OUTLET_DETAIL_3_MENU:
     case Menu::OUTLET_DETAIL_4_MENU:    CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, Menu::MENU_OUT_MAX); break;
     case Menu::SETTINGS_TIME_MENU:      CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, Menu::MENU_TIME_MAX); break;
-    case Menu::SETTINGS_DISPLAY_MENU:   CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, 1); break;
+    case Menu::SETTINGS_DISPLAY_MENU:   CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, Menu::MENU_DISPLAY_MAX); break;
     default: break;
   }
 }
@@ -128,8 +125,8 @@ static void ShowCursor_Main(void) {
 static void showOutletDetail(uint8_t out) {
     char str[16];
     sprintf(str, "%s%s%.6s", Names::MainMenu[0], Names::Divide, Names::OutletMenu[0]);
-    showHeader(str);
-    Display::Print(HmiData_s.Menu_s.X_u8, 2, Names::Back);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
     showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.out[out][SETTING_OUT_AMOUNT]);
     showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.out[out][SETTING_OUT_CYCLE]);
     showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.out[out][SETTING_OUT_DAYTIME]);
@@ -139,31 +136,30 @@ static void showOutletDetail(uint8_t out) {
 
 static void showTimeDetail(void) {
   if (HmiData_s.EditMode_bo == false) { /* only update those values if no edit mode enabled */
-    WB.time.hour.value  = InputData_p.Time_p->hour;
-    WB.time.min.value   = InputData_p.Time_p->minute;
-    WB.time.year.value  = InputData_p.Time_p->year;
-    WB.time.month.value = InputData_p.Time_p->month;
-    WB.time.day.value   = InputData_p.Time_p->day;
+    WB.Time.hour.value  = InputData_p.Time_p->hour;
+    WB.Time.min.value   = InputData_p.Time_p->minute;
+    WB.Time.year.value  = InputData_p.Time_p->year;
+    WB.Time.month.value = InputData_p.Time_p->month;
+    WB.Time.day.value   = InputData_p.Time_p->day;
   }
   char str[16];
   sprintf(str, "%s%s%s", Names::MainMenu[2], Names::Divide, Names::SettingsMenu[0]);
-  showHeader(str);
-
+  Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
   Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.time.hour);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.time.min);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.time.year);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.time.month);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.time.day);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Time.hour);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Time.min);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.Time.year);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.Time.month);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.Time.day);
 }
 
 static void showDisplayDetail(void) {
     char str[16];
     sprintf(str, "%s%s%s", Names::MainMenu[2], Names::Divide, Names::SettingsMenu[1]);
-    showHeader(str);
-
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
-    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_3, Names::SettingsMenu[1]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Display.ScreenSaver);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Display.Sleep);
 }
 
 static void showOverview(void) {
@@ -178,7 +174,7 @@ static void showOverview(void) {
     maxWidth_u8 = widthDays_u8 * days_u8; /* override existing width because of rounding errors!*/
     maxHeight_u8 = heightOuts_u8 * (days_u8 + 1);
     char buff[3];
-    showHeader(Names::MainMenu[1]);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, Names::MainMenu[1]);
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
   
     /* print vertical lines and days */
@@ -251,7 +247,7 @@ static void Pins_Init(void) {
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), ISR_A, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_PRESS), ISR_PRESS, CHANGE);
-  DEBUG("init pins", 0);
+  DEBUG("P:i");
 }
 
 static void KeyPad_Main() {
@@ -289,8 +285,8 @@ static void KeyPad_Main() {
 
 void keyCenterEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) return;
-  DEBUG("KEY_C", 0);
-  DEBUG("MenuIdx: ", HmiData_s.Menu_s.SelectedIdx_u8);
+  DEBUG("K:C");
+  DEBUG("M:"); DEBUG_VALUE(HmiData_s.Menu_s.SelectedIdx_u8);
   uint8_t selOut = WATER_OUTLET_1;
   switch(HmiData_s.Menu_s.Selected_e) {
     case Menu::MAIN_MENU:
@@ -341,16 +337,18 @@ void keyCenterEvent() {
     case Menu::SETTINGS_TIME_MENU:
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-        case Menu::MENU_TIME_HOUR+1:     enableEditMode(&WB.time.hour); break;
-        case Menu::MENU_TIME_MINUTE+1:   enableEditMode(&WB.time.min); break;
-        case Menu::MENU_TIME_YEAR+1:     enableEditMode(&WB.time.year); break;
-        case Menu::MENU_TIME_MONTH+1:    enableEditMode(&WB.time.month); break;
-        case Menu::MENU_TIME_DAY+1:      enableEditMode(&WB.time.day); break;
+        case Menu::MENU_TIME_HOUR+1:     enableEditMode(&WB.Time.hour); break;
+        case Menu::MENU_TIME_MINUTE+1:   enableEditMode(&WB.Time.min); break;
+        case Menu::MENU_TIME_YEAR+1:     enableEditMode(&WB.Time.year); break;
+        case Menu::MENU_TIME_MONTH+1:    enableEditMode(&WB.Time.month); break;
+        case Menu::MENU_TIME_DAY+1:      enableEditMode(&WB.Time.day); break;
       }
     break;
     case Menu::SETTINGS_DISPLAY_MENU: 
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
+        case Menu::MENU_DISPLAY_SCREENSAVER+1: enableEditMode(&WB.Display.ScreenSaver); break;
+        case Menu::MENU_DISPLAY_STANDBY+1:     enableEditMode(&WB.Display.Sleep); break;
       }
     break;
     default: break;
@@ -369,7 +367,7 @@ void enableEditMode(ValueType* val) {
   if (HmiData_s.EditMode_bo == true) {
     HmiData_s.EditMode_bo = false;
     if (lastValue != val->value) { /* save to eeprom if it has been changed */
-      DEBUG("NVM saved: ", val->value);
+        DEBUG("NVM:S"); DEBUG_VALUE(val->value);
       NVM::saveValue(val);
     }
   } else {
@@ -381,7 +379,7 @@ void enableEditMode(ValueType* val) {
 
 void keyDownEvent() {  
   if (HmiData_s.KeyPad_s.Clear_bo == false) return; 
-  DEBUG("KEY_D", 0);
+  DEBUG("K:D");
   if(HmiData_s.EditMode_bo == true) {
     HmiData_s.CurrentValue_p->value -= HmiData_s.CurrentValue_p->step;
     CLAMP(HmiData_s.CurrentValue_p->value, HmiData_s.CurrentValue_p->min, HmiData_s.CurrentValue_p->max);
@@ -394,7 +392,7 @@ void keyDownEvent() {
 
 void keyUpEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) return;
-  DEBUG("KEY_U", 0);
+  DEBUG("K:U");
   if(HmiData_s.EditMode_bo == true) {
     HmiData_s.CurrentValue_p->value += HmiData_s.CurrentValue_p->step;
     CLAMP(HmiData_s.CurrentValue_p->value, HmiData_s.CurrentValue_p->min, HmiData_s.CurrentValue_p->max);
@@ -409,7 +407,7 @@ void keyUpEvent() {
 
 void keyReleasedEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) {
-    DEBUG("KEY_R", 0);
+      DEBUG("K:R");
     HmiData_s.KeyPad_s.Clear_bo = true;
   }
 }
@@ -447,27 +445,39 @@ void editValue() {
 /*************************************************/
 /*         GLOBAL FUNCTION DEFINITIONS           */
 /*************************************************/
-void Display_Main(boolean screensaver_bo) {
-    if (screensaver_bo == true)
-    {
-        ScreenSaver_Main(InputData_p.Time_p);
-    }
-    else 
-    {
-        switch(HmiData_s.KeyPad_s.Key_e){
-        case KEY_CENTER:  keyCenterEvent(); break;
-        case KEY_DOWN:    keyDownEvent(); break;
-        case KEY_UP:      keyUpEvent(); break;
-        case KEY_NONE:
-        default:          keyReleasedEvent(); break;
-    
+void Display_Main(DISPLAY_MODE displayMode_e) {
+    switch (displayMode_e) {
+    case DISPLAY_NORMAL: 
+        switch (HmiData_s.KeyPad_s.Key_e) {
+            case KEY_CENTER:  keyCenterEvent(); break;
+            case KEY_DOWN:    keyDownEvent(); break;
+            case KEY_UP:      keyUpEvent(); break;
+            case KEY_NONE:
+            default:          keyReleasedEvent(); break;
         }
-
         setCursor();
         ShowCursor_Main();
         ShowMenu_Main();
         editValue();
+        break;
+
+    case DISPLAY_SCREENSAVER:
+        ScreenSaver_Main(InputData_p.Time_p); 
+    break;
+    case DISPLAY_STANDBY: 
+        Display::Sleep();
+    break;
+    case DISPLAY_INIT:
+        Display::Awake();
+
     }
+
+    //if (screensaver_bo == true)
+    //{
+    //}
+    //else 
+    //{
+    //}
     KeyPad_Main(); /* get key in the display loop otherwise it ll stuck */
 }
 
