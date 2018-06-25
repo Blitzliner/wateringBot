@@ -65,18 +65,23 @@ namespace NVM
         }
         GetValue(&WB.Display_s.ScreenSaver_s);
         GetValue(&WB.Display_s.Sleep_s);
+        GetValue(&WB.Outlets_s.Enable_s);
+        GetValue(&WB.Outlets_s.FlowAmount_s);
     }
 
     #if defined(FIRST_RUN)
     static void writeAllValues() {
         for(uint8_t idxOut=0; idxOut < WATER_OUTLET_MAX; idxOut++) {
-            saveValue(&WB.out[idxOut][SETTING_OUT_AMOUNT]);
-            saveValue(&WB.out[idxOut][SETTING_OUT_CYCLE]);
-            saveValue(&WB.out[idxOut][SETTING_OUT_DAYTIME]);
-            saveValue(&WB.out[idxOut][SETTING_OUT_OFFSET]);
+            SetValue(&WB.Out_as[idxOut][SETTING_OUT_AMOUNT]);
+            SetValue(&WB.Out_as[idxOut][SETTING_OUT_CYCLE]);
+            SetValue(&WB.Out_as[idxOut][SETTING_OUT_DAYTIME]);
+            SetValue(&WB.Out_as[idxOut][SETTING_OUT_OFFSET]);
         }
-        saveValue(&WB.Display.ScreenSaver);
-        saveValue(&WB.Display.Sleep);
+        SetValue(&WB.Display_s.ScreenSaver_s);
+        SetValue(&WB.Display_s.Sleep_s);
+
+        SetValue(&WB.Outlets_s.Enable_s);
+        SetValue(&WB.Outlets_s.FlowAmount_s);
     }
     #endif
 

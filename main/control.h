@@ -2,7 +2,6 @@
 #include "time.h"
 #include "utils.h"
 
-#define MILLILITERS_PER_SECOND 50
 #define PIN_PUMP 5
 #define PIN_OUTLET_1 6 /* following outlets has to be in ascending pin order 6, 7, 8, 9, 10, 11, 12(max)*/
 
@@ -27,7 +26,7 @@ void _watering(WateringBoy_DataType* data, int8_t &currentOutlet, boolean &mutex
       uint16_t runTime = millis()/1000 - pumpStartTime;
       uint16_t totalMilliliter = data->Out_as[currentOutlet][SETTING_OUT_AMOUNT].Value_s16 + data->Out_as[currentOutlet][SETTING_OUT_AMOUNT].Value_s16;
       /* wait if enough water runs out */
-      if (   (MILLILITERS_PER_SECOND * runTime >= totalMilliliter)
+      if (   (WB.Outlets_s.FlowAmount_s.Value_s16 * runTime >= totalMilliliter)
           || (   (testRun == true) 
               && (data->Out_as[currentOutlet][SETTING_OUT_TESTRUN].Value_s16 == 0))) {
         /* disable pump, so now its free for other outlets */
