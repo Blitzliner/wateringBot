@@ -3,6 +3,12 @@
 
 #include "DS3231.h"
 #include "utils.h"
+#include "types.h"
+
+/*************************************************/
+/*         CONSTANT DEFINES                      */
+/*************************************************/
+#define TEMPERATURE_FILTER 0.98
 
 /*************************************************/
 /*         LOCAL VARIABLE DECLARATION            */
@@ -26,9 +32,11 @@ typedef struct TimeType_Tag {
 /*************************************************/
 /*         LOCAL FUNCTION DECLARATION            */
 /*************************************************/
-static void printTime(TimeType* t);
-static void parseCompileTime(TimeType* t);
+static void PrintTime(TimeType* t);
 
+#ifdef FIRST_RUN
+static void parseCompileTime(TimeType* t);
+#endif
 /*************************************************/
 /*         GLOBAL FUNCTION DECLARATION           */
 /*************************************************/
@@ -39,7 +47,7 @@ void GetTime(TimeType *t);
 /*************************************************/
 /*         LOCAL FUNCTION DEFINITIONS            */
 /*************************************************/
-void printTime(TimeType* t) {
+void PrintTime(TimeType* t) {
     char tempBuff[6];
     char totalBuff[30];
     dtostrf(t->temperature, 4, 1, tempBuff);
@@ -47,28 +55,29 @@ void printTime(TimeType* t) {
     DEBUG(totalBuff);
 }
 
+#ifdef FIRST_RUN
 void parseCompileTime(TimeType* t) {
     char s_month[5];
     const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
     uint16_t year;
     sscanf(__DATE__, "%s %c %d", s_month, &t->day, &year);
-    t->year = (char)(year - 2000);//1970;//2000;
+    t->year = (char)(year - 2000);
     t->month = (strstr(month_names, s_month) - month_names) / 3 + 1;
     DEBUG((strstr(month_names, s_month) - month_names));
     sscanf(__TIME__, "%2hhd %*c %2hhd %*c %2hhd", &t->hour, &t->minute, &t->second);
 }
-
+#endif
 /*************************************************/
 /*         GLOBAL FUNCTION DEFINITIONS            */
 /*************************************************/
 void Time_Init(TimeType& time) {
     Wire.begin();
     time.temperature = Clock.getTemperature();
-    parseCompileTime(&time);
-    printTime(&time);
     #if defined(FIRST_RUN)
-      SetTime(&time);
+        parseCompileTime(&time);
+        SetTime(&time);
     #endif
+    PrintTime(&time);
 }
 
 void SetTime(TimeType* t) {
@@ -89,87 +98,7 @@ void GetTime(TimeType *t) {
   t->year = Clock.getYear();
   t->month = Clock.getMonth(Century); 
   t->day = Clock.getDate(); 
-  EXPONENTIAL_FILTER(t->temperature, Clock.getTemperature(), 0.98);
+  EXPONENTIAL_FILTER(t->temperature, Clock.getTemperature(), TEMPERATURE_FILTER);
 }
-
-/*
-  if (Century) {      // Won't need this for 89 years.
-    Serial.print("1");
-  } else {
-    Serial.print("0");
-  }
-  // and the day of the week
-  //Serial.print(Clock.getDoW(), DEC);
-  // Add AM/PM indicator
-  if (h12) {
-    if (PM) {
-      Serial.print(" PM ");
-    } else {
-      Serial.print(" AM ");
-    }
-  } else {
-    Serial.print(" 24h ");
-  }
-  // Tell whether the time is (likely to be) valid
-  if (Clock.oscillatorCheck()) {
-    Serial.print(" O+");
-  } else {
-    Serial.print(" O-");
-  }*/
-  // Indicate whether an alarm went off
-  /*if (Clock.checkIfAlarm(1)) {
-    Serial.print(" A1!");
-  }
-  if (Clock.checkIfAlarm(2)) {
-    Serial.print(" A2!");
-  }*/
-/*  Serial.print("Alarm 1: ");
-  Clock.getA1Time(ADay, AHour, AMinute, ASecond, ABits, ADy, A12h, Apm);
-  Serial.print(ADay, DEC);
-  if (ADy) {
-    Serial.print(" DoW");
-  } else {
-    Serial.print(" Date");
-  }
-  if (A12h) {
-    if (Apm) {
-      Serial.print('pm ');
-    } else {
-      Serial.print('am ');
-    }
-  }
-  if (Clock.checkAlarmEnabled(1)) {
-    Serial.print("enabled");
-  }
-  Serial.print('\n');
-  // Display Alarm 2 information
-  Serial.print("Alarm 2: ");
-  Clock.getA2Time(ADay, AHour, AMinute, ABits, ADy, A12h, Apm);
-  Serial.print(ADay, DEC);
-  if (ADy) {
-    Serial.print(" DoW");
-  } else {
-    Serial.print(" Date");
-  }
-  Serial.print(' ');
-  Serial.print(AHour, DEC);
-  Serial.print(' ');
-  Serial.print(AMinute, DEC);
-  Serial.print(' ');
-  if (A12h) {
-    if (Apm) {
-      Serial.print('pm');
-    } else {
-      Serial.print('am');
-    }
-  }
-  if (Clock.checkAlarmEnabled(2)) {
-    Serial.print("enabled");
-  }*/
-  /* display alarm bits
-  Serial.print('\n');
-  Serial.print('Alarm bits: ');
-  Serial.print(ABits, DEC);
-  */
 
 #endif

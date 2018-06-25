@@ -25,17 +25,20 @@ void _watering(WateringBoy_DataType* data, int8_t &currentOutlet, boolean &mutex
     } else { 
       /* pump already running, update run time */
       uint16_t runTime = millis()/1000 - pumpStartTime;
-      uint16_t totalMilliliter = data->out[currentOutlet][SETTING_OUT_AMOUNT].value + data->out[currentOutlet][SETTING_OUT_AMOUNT].value;
+      uint16_t totalMilliliter = data->Out_as[currentOutlet][SETTING_OUT_AMOUNT].Value_s16 + data->Out_as[currentOutlet][SETTING_OUT_AMOUNT].Value_s16;
       /* wait if enough water runs out */
       if (   (MILLILITERS_PER_SECOND * runTime >= totalMilliliter)
           || (   (testRun == true) 
-              && (data->out[currentOutlet][SETTING_OUT_TESTRUN].value == 0))) {
+              && (data->Out_as[currentOutlet][SETTING_OUT_TESTRUN].Value_s16 == 0))) {
         /* disable pump, so now its free for other outlets */
         mutexPump = false;
         testRun = false;
         _lastRun[currentOutlet] = millis()/1000;
-        DEBUG("id"); DEBUG_VALUE(currentOutlet);
-        DEBUG("v"); DEBUG_VALUE(_lastRun[currentOutlet]);
+        char out[8];
+        sprintf(out, "ID%1d", currentOutlet);
+        DEBUG(out);
+        sprintf(out, "V%6lu", _lastRun[currentOutlet]);
+        DEBUG(out);
         currentOutlet = -1;
       } 
     }
@@ -46,24 +49,25 @@ void _watering(WateringBoy_DataType* data, int8_t &currentOutlet, boolean &mutex
 }
 
 void _controlPins(const int8_t currentOutlet, const boolean mutexPump) {
-  if (mutexPump == true) {
-    digitalWrite(PIN_PUMP, true);
-    DEBUG("P1");
-  } else {
-    digitalWrite(PIN_PUMP, false);
-    DEBUG("P2");
-  }
+    if (mutexPump == true) {
+        digitalWrite(PIN_PUMP, true);
+        DEBUG("P1");
+    } else {
+        digitalWrite(PIN_PUMP, false);
+        DEBUG("P0");
+    }
   
-  if (currentOutlet == -1) {
-    for (uint8_t idx = 0; idx < WATER_OUTLET_MAX; idx++) {
-      /* disable all outlets */
-      digitalWrite(PIN_OUTLET_1 + idx, false);  
-    }      
-  } else {
-    digitalWrite(PIN_OUTLET_1 + currentOutlet, true);  
-    DEBUG("V");
-    DEBUG_VALUE(currentOutlet);
-  }
+    if (currentOutlet == -1) {
+        /* disable all outlets */
+        for (uint8_t idx_u8 = 0; idx_u8 < WATER_OUTLET_MAX; idx_u8++) {
+            digitalWrite(PIN_OUTLET_1 + idx_u8, false);  
+        }      
+    } else {
+        digitalWrite(PIN_OUTLET_1 + currentOutlet, true);  
+        char out[3];
+        sprintf(out, "V%1d", currentOutlet);
+        DEBUG(out);
+    }
 }
 
 uint16_t _getHours() {
@@ -75,20 +79,20 @@ void _checkOutlets(WateringBoy_DataType* data, int8_t& lastIdx, bool& mutexPump,
     /* first run ever */
         if (_lastRun[idx_u8] == 0) {
         /* check for right time and if pump is not bussy */
-            if (   (_t->hour == data->out[idx_u8][SETTING_OUT_DAYTIME].value)
+            if (   (_t->hour == data->Out_as[idx_u8][SETTING_OUT_DAYTIME].Value_s16)
                 && (mutexPump == false)) {
                 lastIdx = idx_u8;
                 DEBUG("V1");
             }
         } else { /* normal run */
-            if (   ((_lastRun[idx_u8] + data->out[idx_u8][SETTING_OUT_CYCLE].value*60*60) == (millis()/1000))
+            if (   ((_lastRun[idx_u8] + data->Out_as[idx_u8][SETTING_OUT_CYCLE].Value_s16*60*60) == (millis()/1000))
                 && (mutexPump == false)) {
                 lastIdx = idx_u8;
                 DEBUG("V2");
             }
         }
         /*test run is enabled*/
-        if (   (data->out[idx_u8][SETTING_OUT_TESTRUN].value == 1)
+        if (   (data->Out_as[idx_u8][SETTING_OUT_TESTRUN].Value_s16 == 1)
             && (mutexPump == false)) {
             lastIdx = idx_u8;
             testRun = true;

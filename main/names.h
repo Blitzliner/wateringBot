@@ -12,6 +12,7 @@ namespace Menu {
         SETTINGS_MENU, 
         SETTINGS_TIME_MENU,
         SETTINGS_DISPLAY_MENU,
+        SETTINGS_OVERALL_OUTLET_MENU,
     } Menu_Enum;
   
     typedef enum MainMenu_Enum {
@@ -44,9 +45,16 @@ namespace Menu {
         MENU_DISPLAY_MAX,
     } MenuDisplay_Enum;
 
+    typedef enum MenuOverallOutlet_Enum {
+        MENU_OVERALL_OUTLET_FLOW_AMOUNT,
+        MENU_OVERALL_OUTLET_ENABLE,
+        MENU_OVERALL_OUTLET_MAX,
+    } MenuOverallOutlet_Enum;
+
     typedef enum MenuSettings_Enum {
         MENU_SET_TIME_DATE,
         MENU_SET_DISPLAY,
+        MENU_SET_OVERALL_OUTLETS,
         MENU_SET_MAX
     } MenuSettings_Enum;
 
@@ -61,19 +69,50 @@ namespace Menu {
 }
 
 namespace Names {
-    char Headline[] = "WateringBot";
-    char MainMenu[][CHARS_MAX] {
-    "Outputs", "Overview", "Settings"
-    };
-    char OutletMenu[][CHARS_MAX] {
-    "Outlet 1", "Outlet 2", "Outlet 3", "Outlet 4"
-    };
-    char SettingsMenu[][CHARS_MAX] {
-    "Time", "Display"
-    };
-    char Back[] = "back";
-    char Arrow[] = ">";
-    char Divide[] = "/";
-    char Space[] = " ";
+    const char Headline[] = "WateringBot";
+
+    namespace Menu {
+        const char Overview[] = "Overview";
+        const char Settings[] = "Settings";
+        const char Time[] = "Time";
+        const char Display[] = "Display";
+        const char Outlets[] = "Outlets";
+        const char Outlet[] = "Outlet";
+        const char Back[] = "back";
+        const char Arrow[] = ">";
+        const char Divide[] = "/";
+        const char Space[] = " ";
+    }
+
+    namespace Setting {
+        const char Hour[] = "Hour"; 
+        const char Minutes[] = "Minutes";
+        const char Year[] = "Year";
+        const char Month[] = "Month";
+        const char Day[] = "Day";
+        const char ScreenSaver[] = "ScreenSaver";
+        const char Standby[] = "Standby";
+        const char FlowAmount[] = "FlowAmount";
+        const char Enable[] = "Enable";
+        const char Amount[] = "Amount";
+        const char Cycle[] = "Cycle";
+        const char Daytime[] = "Daytime";
+        const char Offset[] = "Offset";
+        const char Testrun[] = "Testrun";
+    }
+
+    namespace Unit {
+        const char NoUnit[] = "";
+        const char Hour[] = "h";
+        const char Second[] = "s";
+        const char Minute[] = "m";
+        const char Milliliter[] = "ml";
+        const char Day[] = "dd";
+        const char Month[] = "mm";
+        const char Year[] = "a";
+        const char Flow[] = "ml/s";
+        const char Clock[] = "Uhr";
+    }
 }
+
 

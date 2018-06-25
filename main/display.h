@@ -59,15 +59,19 @@ static InputData_Type InputData_p;
 /*         LOCAL FUNCTION DECLARATION            */
 /*************************************************/
 static void setCursor(void);
-static void showMenu(const char menuEntries[][CHARS_MAX], uint8_t totalEntries, const char header[], boolean subMenu = true);
+static void showOutletMenu(void);
+static void showSettingMenu(void);
+static void showMainMenu(void);
 static void ShowCursor_Main(void);
 static void showOverview(void);
 static void showValue(uint8_t posX, uint8_t posY, ValueType* value);
 static void showDisplayDetail(void);
+static void showOverallOutletDetail(void);
 static void showTimeDetail(void);
 static void showOutletDetail(uint8_t out);
 static void ShowMenu_Main(void);
 static void enableEditMode(ValueType* val);
+static void editValue(void);
 static void Pins_Init(void);
 static void KeyPad_Main();
 void ISR_A(void);
@@ -83,17 +87,31 @@ void ScreenSaver_Main(TimeType* time_p);
 /*************************************************/
 /*         LOCAL FUNCTION DEFINITIONS            */
 /*************************************************/
-static void showMenu(const char menuEntries[][CHARS_MAX], uint8_t totalEntries, const char header[], boolean subMenu) {
-    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, header);
-    if (subMenu == true) {
-        Display::Print(HmiData_s.Menu_s.X_u8, 2, Names::Back);
-        for (uint8_t idx = 0; idx < totalEntries; idx++){
-            Display::Print(HmiData_s.Menu_s.X_u8, idx + 3, menuEntries[idx]);
-        }
-    } else {
-        for (uint8_t idx = 0; idx < totalEntries; idx++){
-            Display::Print(HmiData_s.Menu_s.X_u8, idx + 2, menuEntries[idx]);
-        }
+static void showMainMenu(void) {
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, Names::Headline);
+    Display::HLine(Display::LINE_HORIZONTAL);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Outlets);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_3, Names::Menu::Overview);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_4, Names::Menu::Settings);
+}
+
+static void showSettingMenu(void) {
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, Names::Menu::Settings);
+    Display::HLine(Display::LINE_HORIZONTAL);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_3, Names::Menu::Time);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_4, Names::Menu::Display);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_5, Names::Menu::Outlets);
+}
+
+static void showOutletMenu(void) {
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, Names::Menu::Outlets);
+    Display::HLine(Display::LINE_HORIZONTAL);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
+    char str[14] = {};
+    for (uint8_t idx_u8 = 0U; idx_u8 < (uint8_t)Menu::MENU_OUTLET_MAX; idx_u8++) {
+        sprintf(str, "%s %d", Names::Menu::Outlet, idx_u8 + 1);
+        Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_3 + idx_u8 * 8, str);
     }
 }
 
@@ -109,63 +127,77 @@ static void setCursor(void) {
     case Menu::OUTLET_DETAIL_4_MENU:    CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, Menu::MENU_OUT_MAX); break;
     case Menu::SETTINGS_TIME_MENU:      CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, Menu::MENU_TIME_MAX); break;
     case Menu::SETTINGS_DISPLAY_MENU:   CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, Menu::MENU_DISPLAY_MAX); break;
+    case Menu::SETTINGS_OVERALL_OUTLET_MENU:   CLAMP(HmiData_s.Menu_s.SelectedIdx_u8, 0, Menu::MENU_OVERALL_OUTLET_MAX); break;
     default: break;
   }
 }
 
 static void ShowCursor_Main(void) {
-  for (uint8_t idx_u8 = 2; idx_u8 <= 8; idx_u8++){
-    if (HmiData_s.Menu_s.SelectedIdx_u8 + 2 == idx_u8) 
-      Display::Print(0, idx_u8, Names::Arrow);
-    else
-      Display::Print(0, idx_u8, Names::Space);
-  }
+    for (uint8_t idx_u8 = 0; idx_u8 < 7; idx_u8++){
+        if (HmiData_s.Menu_s.SelectedIdx_u8 + 0 == idx_u8) 
+            Display::Print(0, idx_u8 * 8 + Display::LINE_2, Names::Menu::Arrow);
+        else
+            Display::Print(0, idx_u8 * 8 + Display::LINE_2, Names::Menu::Space);
+    }
 }
 
 static void showOutletDetail(uint8_t out) {
-    char str[16];
-    sprintf(str, "%s%s%.6s", Names::MainMenu[0], Names::Divide, Names::OutletMenu[0]);
+    char str[20];
+    sprintf(str, "%s%s%s %d", Names::Menu::Outlets, Names::Menu::Divide, Names::Menu::Outlet, out + 1);
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
-    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.out[out][SETTING_OUT_AMOUNT]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.out[out][SETTING_OUT_CYCLE]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.out[out][SETTING_OUT_DAYTIME]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.out[out][SETTING_OUT_OFFSET]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.out[out][SETTING_OUT_TESTRUN]);  
+    Display::HLine(Display::LINE_HORIZONTAL);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Out_as[out][SETTING_OUT_AMOUNT]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Out_as[out][SETTING_OUT_CYCLE]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.Out_as[out][SETTING_OUT_DAYTIME]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.Out_as[out][SETTING_OUT_OFFSET]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.Out_as[out][SETTING_OUT_TESTRUN]); 
 }
 
 static void showTimeDetail(void) {
   if (HmiData_s.EditMode_bo == false) { /* only update those values if no edit mode enabled */
-    WB.Time.hour.value  = InputData_p.Time_p->hour;
-    WB.Time.min.value   = InputData_p.Time_p->minute;
-    WB.Time.year.value  = InputData_p.Time_p->year;
-    WB.Time.month.value = InputData_p.Time_p->month;
-    WB.Time.day.value   = InputData_p.Time_p->day;
+    WB.Time_s.Hour_s.Value_s16  = InputData_p.Time_p->hour;
+    WB.Time_s.Min_s.Value_s16   = InputData_p.Time_p->minute;
+    WB.Time_s.Year_s.Value_s16  = InputData_p.Time_p->year;
+    WB.Time_s.Month_s.Value_s16 = InputData_p.Time_p->month;
+    WB.Time_s.Day_s.Value_s16   = InputData_p.Time_p->day;
   }
-  char str[16];
-  sprintf(str, "%s%s%s", Names::MainMenu[2], Names::Divide, Names::SettingsMenu[0]);
+  char str[20];
+  sprintf(str, "%s%s%s", Names::Menu::Settings, Names::Menu::Divide, Names::Menu::Time);
   Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
-  Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Time.hour);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Time.min);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.Time.year);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.Time.month);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.Time.day);
+  Display::HLine(Display::LINE_HORIZONTAL);
+  Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Time_s.Hour_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Time_s.Min_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.Time_s.Year_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.Time_s.Month_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.Time_s.Day_s);
 }
 
 static void showDisplayDetail(void) {
-    char str[16];
-    sprintf(str, "%s%s%s", Names::MainMenu[2], Names::Divide, Names::SettingsMenu[1]);
+    char str[20];
+    sprintf(str, "%s%s%s", Names::Menu::Settings, Names::Menu::Divide, Names::Menu::Display);
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
-    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Display.ScreenSaver);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Display.Sleep);
+    Display::HLine(Display::LINE_HORIZONTAL);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Display_s.ScreenSaver_s);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Display_s.Sleep_s);
+}
+
+static void showOverallOutletDetail(void) {
+    char str[20];
+    sprintf(str, "%s%s%s", Names::Menu::Settings, Names::Menu::Divide, Names::Menu::Outlets);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
+    Display::HLine(Display::LINE_HORIZONTAL);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Outlets_s.FlowAmount_s);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Outlets_s.Enable_s);
 }
 
 static void showOverview(void) {
     CLAMP(HmiData_s.overviewNrDays_u8, OVERVIEW_MIN_DISPLAYED_DAYS, OVERVIEW_MAX_DISPLAYED_DAYS);
     uint8_t days_u8 = HmiData_s.overviewNrDays_u8;
-    const uint8_t START_Y = 18;
+    const uint8_t START_Y = 22;
     const uint8_t START_X = 12;
     uint8_t maxWidth_u8 = 128-START_X-1;
     uint8_t maxHeight_u8 = 64-START_Y-1;
@@ -174,8 +206,9 @@ static void showOverview(void) {
     maxWidth_u8 = widthDays_u8 * days_u8; /* override existing width because of rounding errors!*/
     maxHeight_u8 = heightOuts_u8 * (days_u8 + 1);
     char buff[3];
-    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, Names::MainMenu[1]);
-    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Back);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, Names::Menu::Overview);
+    Display::HLine(Display::LINE_HORIZONTAL);
+    Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
   
     /* print vertical lines and days */
     for (uint8_t idxDays_u8 = 0; idxDays_u8 < (days_u8+1); idxDays_u8++) {
@@ -192,9 +225,9 @@ static void showOverview(void) {
     }
 
     for (uint8_t idxOuts_u8 = 0; idxOuts_u8 < WATER_OUTLET_MAX; idxOuts_u8++) {
-        uint8_t volHeight_u8 = (float)WB.out[idxOuts_u8][SETTING_OUT_AMOUNT].value/1000.0 * heightOuts_u8;
-        uint8_t offset_u8 = (float)widthDays_u8/24.0 * (float)WB.out[idxOuts_u8][SETTING_OUT_DAYTIME].value;
-        int16_t cyc_s16 = (float)WB.out[idxOuts_u8][SETTING_OUT_CYCLE].value;
+        uint8_t volHeight_u8 = (float)WB.Out_as[idxOuts_u8][SETTING_OUT_AMOUNT].Value_s16/1000.0 * heightOuts_u8;
+        uint8_t offset_u8 = (float)widthDays_u8/24.0 * (float)WB.Out_as[idxOuts_u8][SETTING_OUT_DAYTIME].Value_s16;
+        int16_t cyc_s16 = (float)WB.Out_as[idxOuts_u8][SETTING_OUT_CYCLE].Value_s16;
         for(int16_t idxCyc_s16 = 0; idxCyc_s16<(24*days_u8); idxCyc_s16++) {
             if(idxCyc_s16%cyc_s16 == 0) {
             uint8_t offDays = (float)idxCyc_s16/24.0 * (float)widthDays_u8;
@@ -218,16 +251,17 @@ void ScreenSaver_Main(TimeType* time_p) {
 
 static void ShowMenu_Main(void) {
     switch(HmiData_s.Menu_s.Selected_e) {
-        case Menu::OUTLET_MENU:     showMenu(Names::OutletMenu,  (uint8_t)Menu::MENU_OUTLET_MAX, Names::MainMenu[0]); break;
+    case Menu::OUTLET_MENU:     showOutletMenu(); break;// Names::OutletMenu, (uint8_t)Menu::MENU_OUTLET_MAX, Names::MainMenu[0]); break;
         case Menu::OVERVIEW_MENU:   showOverview(); break;
-        case Menu::SETTINGS_MENU:   showMenu(Names::SettingsMenu, (uint8_t)Menu::MENU_SET_MAX, Names::MainMenu[1]);  break;
-        case Menu::MAIN_MENU:       showMenu(Names::MainMenu, (uint8_t)Menu::MENU_MAIN_MAX, Names::Headline, false); break;
+        case Menu::SETTINGS_MENU:   showSettingMenu(); break;// Names::SettingsMenu, (uint8_t)Menu::MENU_SET_MAX, Names::MainMenu[1]);  break;
+        case Menu::MAIN_MENU:       showMainMenu(); break;// Names::MainMenu, (uint8_t)Menu::MENU_MAIN_MAX, Names::Headline, false); break;
         case Menu::OUTLET_DETAIL_1_MENU: showOutletDetail(WATER_OUTLET_1); break;
         case Menu::OUTLET_DETAIL_2_MENU: showOutletDetail(WATER_OUTLET_2); break;
         case Menu::OUTLET_DETAIL_3_MENU: showOutletDetail(WATER_OUTLET_3); break;
         case Menu::OUTLET_DETAIL_4_MENU: showOutletDetail(WATER_OUTLET_4); break;
         case Menu::SETTINGS_TIME_MENU: showTimeDetail(); break;
         case Menu::SETTINGS_DISPLAY_MENU: showDisplayDetail(); break;
+        case Menu::SETTINGS_OVERALL_OUTLET_MENU: showOverallOutletDetail(); break;
         default: break;
     }
 }
@@ -287,7 +321,7 @@ void keyCenterEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) return;
   DEBUG("K:C");
   DEBUG("M:"); DEBUG_VALUE(HmiData_s.Menu_s.SelectedIdx_u8);
-  uint8_t selOut = WATER_OUTLET_1;
+  uint8_t selOut;
   switch(HmiData_s.Menu_s.Selected_e) {
     case Menu::MAIN_MENU:
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
@@ -313,7 +347,8 @@ void keyCenterEvent() {
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::MAIN_MENU; break;
         case Menu::MENU_SET_TIME_DATE+1: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_TIME_MENU; break;
-        case Menu::MENU_SET_DISPLAY+1: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_DISPLAY_MENU; break;
+        case Menu::MENU_SET_DISPLAY + 1: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_DISPLAY_MENU; break;
+        case Menu::MENU_SET_OVERALL_OUTLETS + 1: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_OVERALL_OUTLET_MENU; break;
       }
     break;
     case Menu::OUTLET_DETAIL_1_MENU:
@@ -327,53 +362,62 @@ void keyCenterEvent() {
       
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::OUTLET_MENU; break;
-        case Menu::MENU_OUT_AMOUNT+1:  enableEditMode(&WB.out[selOut][SETTING_OUT_AMOUNT]); break;
-        case Menu::MENU_OUT_CYCLE+1:   enableEditMode(&WB.out[selOut][SETTING_OUT_CYCLE]); break;
-        case Menu::MENU_OUT_DAYTIME+1: enableEditMode(&WB.out[selOut][SETTING_OUT_DAYTIME]); break;
-        case Menu::MENU_OUT_OFFSET+1:  enableEditMode(&WB.out[selOut][SETTING_OUT_OFFSET]); break;
-        case Menu::MENU_OUT_TESTRUN+1: enableEditMode(&WB.out[selOut][SETTING_OUT_TESTRUN]); break;
+        case Menu::MENU_OUT_AMOUNT+1:  enableEditMode(&WB.Out_as[selOut][SETTING_OUT_AMOUNT]); break;
+        case Menu::MENU_OUT_CYCLE+1:   enableEditMode(&WB.Out_as[selOut][SETTING_OUT_CYCLE]); break;
+        case Menu::MENU_OUT_DAYTIME+1: enableEditMode(&WB.Out_as[selOut][SETTING_OUT_DAYTIME]); break;
+        case Menu::MENU_OUT_OFFSET+1:  enableEditMode(&WB.Out_as[selOut][SETTING_OUT_OFFSET]); break;
+        case Menu::MENU_OUT_TESTRUN+1: enableEditMode(&WB.Out_as[selOut][SETTING_OUT_TESTRUN]); break;
       }
     break;
     case Menu::SETTINGS_TIME_MENU:
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-        case Menu::MENU_TIME_HOUR+1:     enableEditMode(&WB.Time.hour); break;
-        case Menu::MENU_TIME_MINUTE+1:   enableEditMode(&WB.Time.min); break;
-        case Menu::MENU_TIME_YEAR+1:     enableEditMode(&WB.Time.year); break;
-        case Menu::MENU_TIME_MONTH+1:    enableEditMode(&WB.Time.month); break;
-        case Menu::MENU_TIME_DAY+1:      enableEditMode(&WB.Time.day); break;
+        case Menu::MENU_TIME_HOUR+1:     enableEditMode(&WB.Time_s.Hour_s); break;
+        case Menu::MENU_TIME_MINUTE+1:   enableEditMode(&WB.Time_s.Min_s); break;
+        case Menu::MENU_TIME_YEAR+1:     enableEditMode(&WB.Time_s.Year_s); break;
+        case Menu::MENU_TIME_MONTH+1:    enableEditMode(&WB.Time_s.Month_s); break;
+        case Menu::MENU_TIME_DAY+1:      enableEditMode(&WB.Time_s.Day_s); break;
       }
     break;
     case Menu::SETTINGS_DISPLAY_MENU: 
-      switch(HmiData_s.Menu_s.SelectedIdx_u8) {
-        case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-        case Menu::MENU_DISPLAY_SCREENSAVER+1: enableEditMode(&WB.Display.ScreenSaver); break;
-        case Menu::MENU_DISPLAY_STANDBY+1:     enableEditMode(&WB.Display.Sleep); break;
-      }
+        switch(HmiData_s.Menu_s.SelectedIdx_u8) {
+            case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
+            case Menu::MENU_DISPLAY_SCREENSAVER+1: enableEditMode(&WB.Display_s.ScreenSaver_s); break;
+            case Menu::MENU_DISPLAY_STANDBY+1:     enableEditMode(&WB.Display_s.Sleep_s); break;
+        }
+    break;
+    case Menu::SETTINGS_OVERALL_OUTLET_MENU:
+        switch (HmiData_s.Menu_s.SelectedIdx_u8) {
+            case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
+            case Menu::MENU_OVERALL_OUTLET_FLOW_AMOUNT + 1: enableEditMode(&WB.Outlets_s.FlowAmount_s); break;
+            case Menu::MENU_OVERALL_OUTLET_ENABLE + 1:      enableEditMode(&WB.Outlets_s.Enable_s); break;
+        }
     break;
     default: break;
   }
   HmiData_s.KeyPad_s.Clear_bo = false;
   if (   HmiData_s.Menu_s.Selected_e == Menu::MAIN_MENU 
       || HmiData_s.Menu_s.Selected_e == Menu::OUTLET_MENU 
-      || HmiData_s.Menu_s.Selected_e == Menu::OVERVIEW_MENU 
+      || HmiData_s.Menu_s.Selected_e == Menu::OVERVIEW_MENU
       || HmiData_s.Menu_s.Selected_e == Menu::SETTINGS_MENU) {
     HmiData_s.Menu_s.SelectedIdx_u8 = 0;      
   }
+
+  DEBUG("M:"); DEBUG_VALUE((uint8_t)HmiData_s.Menu_s.Selected_e);
 }
 
 void enableEditMode(ValueType* val) {
-  static int32_t lastValue = val->value;
+  static int32_t lastValue = val->Value_s16;
   if (HmiData_s.EditMode_bo == true) {
     HmiData_s.EditMode_bo = false;
-    if (lastValue != val->value) { /* save to eeprom if it has been changed */
-        DEBUG("NVM:S"); DEBUG_VALUE(val->value);
-      NVM::saveValue(val);
+    if (lastValue != val->Value_s16) { /* save to eeprom if it has been changed */
+        DEBUG("NVM:S"); DEBUG_VALUE(val->Value_s16);
+      NVM::SetValue(val);
     }
   } else {
     HmiData_s.EditMode_bo = true; 
     HmiData_s.CurrentValue_p = val;
-    lastValue = val->value;
+    lastValue = val->Value_s16;
   }
 }
 
@@ -381,8 +425,8 @@ void keyDownEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) return; 
   DEBUG("K:D");
   if(HmiData_s.EditMode_bo == true) {
-    HmiData_s.CurrentValue_p->value -= HmiData_s.CurrentValue_p->step;
-    CLAMP(HmiData_s.CurrentValue_p->value, HmiData_s.CurrentValue_p->min, HmiData_s.CurrentValue_p->max);
+    HmiData_s.CurrentValue_p->Value_s16 -= HmiData_s.CurrentValue_p->Step_s16;
+    CLAMP(HmiData_s.CurrentValue_p->Value_s16, HmiData_s.CurrentValue_p->Min_s16, HmiData_s.CurrentValue_p->Max_s16);
   } else {
     HmiData_s.Menu_s.SelectedIdx_u8++; 
     HmiData_s.overviewNrDays_u8++;
@@ -394,8 +438,8 @@ void keyUpEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) return;
   DEBUG("K:U");
   if(HmiData_s.EditMode_bo == true) {
-    HmiData_s.CurrentValue_p->value += HmiData_s.CurrentValue_p->step;
-    CLAMP(HmiData_s.CurrentValue_p->value, HmiData_s.CurrentValue_p->min, HmiData_s.CurrentValue_p->max);
+    HmiData_s.CurrentValue_p->Value_s16 += HmiData_s.CurrentValue_p->Step_s16;
+    CLAMP(HmiData_s.CurrentValue_p->Value_s16, HmiData_s.CurrentValue_p->Min_s16, HmiData_s.CurrentValue_p->Max_s16);
   } else {
     if (HmiData_s.Menu_s.SelectedIdx_u8 > 0) {
       HmiData_s.Menu_s.SelectedIdx_u8--;
@@ -406,40 +450,40 @@ void keyUpEvent() {
 }
 
 void keyReleasedEvent() {
-  if (HmiData_s.KeyPad_s.Clear_bo == false) {
-      DEBUG("K:R");
-    HmiData_s.KeyPad_s.Clear_bo = true;
-  }
+    if (HmiData_s.KeyPad_s.Clear_bo == false) {
+        DEBUG("K:R");
+        HmiData_s.KeyPad_s.Clear_bo = true;
+    }
 }
 
 void showValue(uint8_t posX, uint8_t posY, ValueType* value) {
-  char buff[CHARS_MAX] = { 0 };
-  sprintf(buff, "%s:", value->name);
-  Display::Print(posX, posY, value->name);
-  sprintf(buff, "%4d", value->value);
-  Display::Print(posX + DISPLAY_VALUE_POSITION, posY, buff);
-  Display::Print(posX + DISPLAY_UNIT_POSITION, posY, value->unit);
+    char buff[16];
+    sprintf(buff, "%s:", value->Name_pc);
+    Display::Print(posX, posY, value->Name_pc);
+    sprintf(buff, "%4d", value->Value_s16);
+    Display::Print(posX + DISPLAY_VALUE_POSITION, posY, buff);
+    Display::Print(posX + DISPLAY_UNIT_POSITION, posY, value->Unit_pc);
 }
 
-void editValue() {
-  static uint32_t lastBlink = millis();
-  static boolean toggleValue = false; 
+static void editValue(void) {
+    static uint32_t lastBlink = millis();
+    static boolean toggleValue = false; 
   
-  if(HmiData_s.EditMode_bo == true) {
-    char buff[5];
-    snprintf(buff, 5, "%4d", HmiData_s.CurrentValue_p->value);
-    if (millis() - lastBlink >= EDIT_MODE_BLINK_DURATION) {
-      toggleValue = !toggleValue;
-      lastBlink = millis();
-    } 
-    if (toggleValue == true) {
-      Display::Print(HmiData_s.Menu_s.X_u8 + DISPLAY_VALUE_POSITION, HmiData_s.Menu_s.SelectedIdx_u8 + 2, buff, 0, 1); /* highlight text */
-    } else {
-      Display::Print(HmiData_s.Menu_s.X_u8 + DISPLAY_VALUE_POSITION, HmiData_s.Menu_s.SelectedIdx_u8 + 2, buff);
+    if(HmiData_s.EditMode_bo == true) {
+        char buff[5];
+        snprintf(buff, 5, "%4d", HmiData_s.CurrentValue_p->Value_s16);
+        if (millis() - lastBlink >= EDIT_MODE_BLINK_DURATION) {
+            toggleValue = !toggleValue;
+            lastBlink = millis();
+        } 
+        if (toggleValue == true) {
+            Display::Print(HmiData_s.Menu_s.X_u8 + DISPLAY_VALUE_POSITION, HmiData_s.Menu_s.SelectedIdx_u8 * 8 + Display::LINE_2, buff, 0, 1); /* highlight text */
+        } else {
+            Display::Print(HmiData_s.Menu_s.X_u8 + DISPLAY_VALUE_POSITION, HmiData_s.Menu_s.SelectedIdx_u8 * 8 + Display::LINE_2, buff);
+        }
+    } else if (toggleValue == true) { /* if edit mode released but text highlight still active deactivate here */
+        toggleValue = false;
     }
-  } else if (toggleValue == true) { /* if edit mode released but text highlight still active deactivate here */
-    toggleValue = false;
-  }
 }
 
 /*************************************************/
@@ -462,32 +506,32 @@ void Display_Main(DISPLAY_MODE displayMode_e) {
         break;
 
     case DISPLAY_SCREENSAVER:
+        DEBUG("D:Sa");
+        HmiData_s.EditMode_bo = false;
         ScreenSaver_Main(InputData_p.Time_p); 
     break;
     case DISPLAY_STANDBY: 
+        DEBUG("D:Sb");
+        HmiData_s.EditMode_bo = false;
         Display::Sleep();
     break;
     case DISPLAY_INIT:
+        DEBUG("D:i");
         Display::Awake();
 
     }
 
-    //if (screensaver_bo == true)
-    //{
-    //}
-    //else 
-    //{
-    //}
     KeyPad_Main(); /* get key in the display loop otherwise it ll stuck */
 }
 
 void Display_Init(TimeType* time_p) {
+    DEBUG("D:I");
     Display::Init();
     HmiData_s.Menu_s.SelectedIdx_u8 = Menu::MENU_MAIN_OUTPUT;
     HmiData_s.Menu_s.Selected_e = Menu::MAIN_MENU;
     HmiData_s.KeyPad_s.Key_e = KEY_NONE;
     InputData_p.Time_p = time_p;
-    showMenu(Names::MainMenu, (uint8_t)Menu::MENU_MAIN_MAX, Names::Headline, false);
+    showMainMenu();// Names::MainMenu, (uint8_t)Menu::MENU_MAIN_MAX, Names::Headline, false);
 
     Pins_Init();
 }

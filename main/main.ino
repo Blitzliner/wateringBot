@@ -9,15 +9,13 @@ DISPLAY_MODE DisplayMode_e;
 
 void setup() {
     DEBUG_INIT(SERIAL_BAUD_115200);
-    Display_Init(&time); /* set up the main menu and pass a pointer to the time to it */  
-    Time_Init(time); /* build up connection to rtc */
-    
-    SettingTime_Init(&time);/* set default values, names, .. */
-    Setting_Init();  /* set default values, names, .. */
+    Display_Init(&time);    /* set up the main menu and pass a pointer to the time to it */  
+    Time_Init(time);        /* build up connection to rtc */
+    NVM::Setting_Init(&time);    /* set default values, names, .. */
     #if defined(FIRST_RUN)
-        NVM::SetSettings(); /* save all values which are set in init_setting() */
+        NVM::SetSettings(); /* save all default values to eeprom */
     #else
-        NVM::GetSettings(); /* read data from eeprom */
+        NVM::GetAllValues(); /* read data from eeprom and overwrite default values */
     #endif  
     Control_Init(&time);
     DisplayMode_e = DISPLAY_NORMAL;
@@ -43,8 +41,8 @@ void loop() {
         } else {
             /* no key are pressed. Check if it is time to display the screen saver */
             int16_t deltaTime_s16 = (int16_t)(millis() / 1000 - lastTimeKeyPress_u32);
-            if (deltaTime_s16 > WB.Display.ScreenSaver.value) {
-                if (deltaTime_s16 > WB.Display.Sleep.value) {
+            if (deltaTime_s16 > WB.Display_s.ScreenSaver_s.Value_s16) {
+                if (deltaTime_s16 > WB.Display_s.Sleep_s.Value_s16) {
                     DisplayMode_e = DISPLAY_STANDBY;
                 } else {
                     DisplayMode_e = DISPLAY_SCREENSAVER;

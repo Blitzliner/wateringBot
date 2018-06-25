@@ -3,13 +3,14 @@ U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE|U8G_I2C_OPT_DEV_0);
 
 namespace Display {
     enum DISPLAY_LINE_TAG {
-        LINE_1 = 1,
-        LINE_2,
-        LINE_3,
-        LINE_4,
-        LINE_5,
-        LINE_6,
-        LINE_7,
+        LINE_1 = 8,
+        LINE_HORIZONTAL = 10,
+        LINE_2 = 20,
+        LINE_3 = 28,
+        LINE_4 = 36,
+        LINE_5 = 44,
+        LINE_6 = 52,
+        LINE_7 = 60,
     };
     
   void Init() {
@@ -32,17 +33,21 @@ namespace Display {
     u8g.drawBox(x, y, w, h);
   }
 
+  void HLine(uint8_t y_u8) {
+      u8g.drawLine(1, y_u8, 128, y_u8);
+  }
+
   void Print(uint8_t x, uint8_t y, const char text[], uint8_t fontSize = 0, uint8_t fontType = 0) {
     if (fontSize == 0) {
       if (fontType == 0) {
         //u8g.setFont(u8g_font_unifont); u8g.setFont(u8g_font_u8glib_4);//u8g_font_m2icon_5);//u8g_font_6x12_75r); 
         u8g.setFont(u8g_font_6x10);
-        u8g.drawStr(x, y*8, text);
+        u8g.drawStr(x, y, text);
       } else {
         uint8_t w = 28;//Disp.menuUnit - Disp.menuVal;
-        u8g.drawBox(x-2, (y - 1)*8, w, 8);
+        u8g.drawBox(x-2, y - 8, w, 8);
         u8g.setColorIndex(0);
-        u8g.drawStr(x, y*8, text);
+        u8g.drawStr(x, y, text);
         u8g.setColorIndex(1);
       }
     } else {
