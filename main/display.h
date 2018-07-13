@@ -323,6 +323,8 @@ void keyCenterEvent() {
   DEBUG("K:C");
   DEBUG("M:"); DEBUG_VALUE(HmiData_s.Menu_s.SelectedIdx_u8);
   uint8_t selOut;
+  ValueType *editVal_p = NULL;
+
   switch(HmiData_s.Menu_s.Selected_e) {
     case Menu::MAIN_MENU:
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
@@ -363,47 +365,47 @@ void keyCenterEvent() {
       
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::OUTLET_MENU; break;
-        case Menu::MENU_OUT_AMOUNT+1:  enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_AMOUNT]); break;
-        case Menu::MENU_OUT_CYCLE+1:   enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_CYCLE]); break;
-        case Menu::MENU_OUT_DAYTIME+1: enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_DAYTIME]); break;
-        case Menu::MENU_OUT_OFFSET+1:  enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_OFFSET]); break;
-        case Menu::MENU_OUT_TESTRUN+1: enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_TESTRUN]); break;
+        case Menu::MENU_OUT_AMOUNT+1:  editVal_p = &InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_AMOUNT]; break;
+        case Menu::MENU_OUT_CYCLE+1:   editVal_p = &InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_CYCLE]; break;
+        case Menu::MENU_OUT_DAYTIME+1: editVal_p = &InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_DAYTIME]; break;
+        case Menu::MENU_OUT_OFFSET+1:  editVal_p = &InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_OFFSET]; break;
+        case Menu::MENU_OUT_TESTRUN+1: editVal_p = &InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_TESTRUN]; break;
       }
     break;
     case Menu::SETTINGS_TIME_MENU:
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-        case Menu::MENU_TIME_HOUR+1:     enableEditMode(&InputData_p.Wb_p->Time_s.Hour_s); break;
-        case Menu::MENU_TIME_MINUTE+1:   enableEditMode(&InputData_p.Wb_p->Time_s.Min_s); break;
-        case Menu::MENU_TIME_YEAR+1:     enableEditMode(&InputData_p.Wb_p->Time_s.Year_s); break;
-        case Menu::MENU_TIME_MONTH+1:    enableEditMode(&InputData_p.Wb_p->Time_s.Month_s); break;
-        case Menu::MENU_TIME_DAY+1:      enableEditMode(&InputData_p.Wb_p->Time_s.Day_s); break;
+        case Menu::MENU_TIME_HOUR+1:     editVal_p = &InputData_p.Wb_p->Time_s.Hour_s; break;
+        case Menu::MENU_TIME_MINUTE+1:   editVal_p = &InputData_p.Wb_p->Time_s.Min_s; break;
+        case Menu::MENU_TIME_YEAR + 1:   editVal_p = &InputData_p.Wb_p->Time_s.Year_s; break;
+        case Menu::MENU_TIME_MONTH+1:    editVal_p = &InputData_p.Wb_p->Time_s.Month_s; break;
+        case Menu::MENU_TIME_DAY+1:      editVal_p = &InputData_p.Wb_p->Time_s.Day_s; break;
       }
     break;
     case Menu::SETTINGS_DISPLAY_MENU: 
         switch(HmiData_s.Menu_s.SelectedIdx_u8) {
             case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-            case Menu::MENU_DISPLAY_SCREENSAVER+1: enableEditMode(&InputData_p.Wb_p->Display_s.ScreenSaver_s); break;
-            case Menu::MENU_DISPLAY_STANDBY+1:     enableEditMode(&InputData_p.Wb_p->Display_s.Sleep_s); break;
+            case Menu::MENU_DISPLAY_SCREENSAVER+1: editVal_p = &InputData_p.Wb_p->Display_s.ScreenSaver_s; break;
+            case Menu::MENU_DISPLAY_STANDBY+1:     editVal_p = &InputData_p.Wb_p->Display_s.Sleep_s; break;
         }
     break;
     case Menu::SETTINGS_OVERALL_OUTLET_MENU:
         switch (HmiData_s.Menu_s.SelectedIdx_u8) {
             case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-            case Menu::MENU_OVERALL_OUTLET_FLOW_AMOUNT + 1: enableEditMode(&InputData_p.Wb_p->Outlets_s.FlowAmount_s); break;
-            case Menu::MENU_OVERALL_OUTLET_ENABLE + 1:      enableEditMode(&InputData_p.Wb_p->Outlets_s.Enable_s); break;
+            case Menu::MENU_OVERALL_OUTLET_FLOW_AMOUNT + 1: editVal_p = &InputData_p.Wb_p->Outlets_s.FlowAmount_s; break;
+            case Menu::MENU_OVERALL_OUTLET_ENABLE + 1:      editVal_p = &InputData_p.Wb_p->Outlets_s.Enable_s; break;
         }
     break;
     default: break;
   }
-  HmiData_s.KeyPad_s.Clear_bo = false;
-  if (   HmiData_s.Menu_s.Selected_e == Menu::MAIN_MENU 
-      || HmiData_s.Menu_s.Selected_e == Menu::OUTLET_MENU 
-      || HmiData_s.Menu_s.Selected_e == Menu::OVERVIEW_MENU
-      || HmiData_s.Menu_s.Selected_e == Menu::SETTINGS_MENU) {
-    HmiData_s.Menu_s.SelectedIdx_u8 = 0;      
+  
+  if (NULL != editVal_p) {
+      enableEditMode(editVal_p);
+  } else {
+      HmiData_s.Menu_s.SelectedIdx_u8 = 0;
   }
 
+  HmiData_s.KeyPad_s.Clear_bo = false;
   DEBUG("M:"); DEBUG_VALUE((uint8_t)HmiData_s.Menu_s.Selected_e);
 }
 
