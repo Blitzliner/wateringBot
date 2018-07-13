@@ -44,7 +44,8 @@ typedef struct HMI_Tag {
 } HMI_Type;
 
 typedef struct InputData_Tag {
-    TimeType* Time_p;
+    TimeType* Time_p; 
+    WateringBoy_DataType *Wb_p;
 } InputData_Type;
 
 enum DISPLAY_MODE { DISPLAY_NORMAL, DISPLAY_SCREENSAVER, DISPLAY_STANDBY, DISPLAY_INIT };
@@ -147,31 +148,31 @@ static void showOutletDetail(uint8_t out) {
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
     Display::HLine(Display::LINE_HORIZONTAL);
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Out_as[out][SETTING_OUT_AMOUNT]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Out_as[out][SETTING_OUT_CYCLE]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.Out_as[out][SETTING_OUT_DAYTIME]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.Out_as[out][SETTING_OUT_OFFSET]);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.Out_as[out][SETTING_OUT_TESTRUN]); 
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &InputData_p.Wb_p->Out_as[out][SETTING_OUT_AMOUNT]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &InputData_p.Wb_p->Out_as[out][SETTING_OUT_CYCLE]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &InputData_p.Wb_p->Out_as[out][SETTING_OUT_DAYTIME]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &InputData_p.Wb_p->Out_as[out][SETTING_OUT_OFFSET]);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &InputData_p.Wb_p->Out_as[out][SETTING_OUT_TESTRUN]); 
 }
 
 static void showTimeDetail(void) {
   if (HmiData_s.EditMode_bo == false) { /* only update those values if no edit mode enabled */
-    WB.Time_s.Hour_s.Value_s16  = InputData_p.Time_p->hour;
-    WB.Time_s.Min_s.Value_s16   = InputData_p.Time_p->minute;
-    WB.Time_s.Year_s.Value_s16  = InputData_p.Time_p->year;
-    WB.Time_s.Month_s.Value_s16 = InputData_p.Time_p->month;
-    WB.Time_s.Day_s.Value_s16   = InputData_p.Time_p->day;
+    InputData_p.Wb_p->Time_s.Hour_s.Value_s16  = InputData_p.Time_p->hour;
+    InputData_p.Wb_p->Time_s.Min_s.Value_s16   = InputData_p.Time_p->minute;
+    InputData_p.Wb_p->Time_s.Year_s.Value_s16  = InputData_p.Time_p->year;
+    InputData_p.Wb_p->Time_s.Month_s.Value_s16 = InputData_p.Time_p->month;
+    InputData_p.Wb_p->Time_s.Day_s.Value_s16   = InputData_p.Time_p->day;
   }
   char str[20];
   sprintf(str, "%s%s%s", Names::Menu::Settings, Names::Menu::Divide, Names::Menu::Time);
   Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
   Display::HLine(Display::LINE_HORIZONTAL);
   Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Time_s.Hour_s);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Time_s.Min_s);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &WB.Time_s.Year_s);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &WB.Time_s.Month_s);
-  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &WB.Time_s.Day_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &InputData_p.Wb_p->Time_s.Hour_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &InputData_p.Wb_p->Time_s.Min_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &InputData_p.Wb_p->Time_s.Year_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &InputData_p.Wb_p->Time_s.Month_s);
+  showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &InputData_p.Wb_p->Time_s.Day_s);
 }
 
 static void showDisplayDetail(void) {
@@ -180,8 +181,8 @@ static void showDisplayDetail(void) {
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
     Display::HLine(Display::LINE_HORIZONTAL);
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Display_s.ScreenSaver_s);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Display_s.Sleep_s);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &InputData_p.Wb_p->Display_s.ScreenSaver_s);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &InputData_p.Wb_p->Display_s.Sleep_s);
 }
 
 static void showOverallOutletDetail(void) {
@@ -190,8 +191,8 @@ static void showOverallOutletDetail(void) {
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_1, str);
     Display::HLine(Display::LINE_HORIZONTAL);
     Display::Print(HmiData_s.Menu_s.X_u8, Display::LINE_2, Names::Menu::Back);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &WB.Outlets_s.FlowAmount_s);
-    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &WB.Outlets_s.Enable_s);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_3, &InputData_p.Wb_p->Outlets_s.FlowAmount_s);
+    showValue(HmiData_s.Menu_s.X_u8, Display::LINE_4, &InputData_p.Wb_p->Outlets_s.Enable_s);
 }
 
 static void showOverview(void) {
@@ -225,9 +226,9 @@ static void showOverview(void) {
     }
 
     for (uint8_t idxOuts_u8 = 0; idxOuts_u8 < WATER_OUTLET_MAX; idxOuts_u8++) {
-        uint8_t volHeight_u8 = (float)WB.Out_as[idxOuts_u8][SETTING_OUT_AMOUNT].Value_s16/1000.0 * heightOuts_u8;
-        uint8_t offset_u8 = (float)widthDays_u8/24.0 * (float)WB.Out_as[idxOuts_u8][SETTING_OUT_DAYTIME].Value_s16;
-        int16_t cyc_s16 = (float)WB.Out_as[idxOuts_u8][SETTING_OUT_CYCLE].Value_s16;
+        uint8_t volHeight_u8 = (float)InputData_p.Wb_p->Out_as[idxOuts_u8][SETTING_OUT_AMOUNT].Value_s16/1000.0 * heightOuts_u8;
+        uint8_t offset_u8 = (float)widthDays_u8/24.0 * (float)InputData_p.Wb_p->Out_as[idxOuts_u8][SETTING_OUT_DAYTIME].Value_s16;
+        int16_t cyc_s16 = (float)InputData_p.Wb_p->Out_as[idxOuts_u8][SETTING_OUT_CYCLE].Value_s16;
         for(int16_t idxCyc_s16 = 0; idxCyc_s16<(24*days_u8); idxCyc_s16++) {
             if(idxCyc_s16%cyc_s16 == 0) {
             uint8_t offDays = (float)idxCyc_s16/24.0 * (float)widthDays_u8;
@@ -362,35 +363,35 @@ void keyCenterEvent() {
       
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::OUTLET_MENU; break;
-        case Menu::MENU_OUT_AMOUNT+1:  enableEditMode(&WB.Out_as[selOut][SETTING_OUT_AMOUNT]); break;
-        case Menu::MENU_OUT_CYCLE+1:   enableEditMode(&WB.Out_as[selOut][SETTING_OUT_CYCLE]); break;
-        case Menu::MENU_OUT_DAYTIME+1: enableEditMode(&WB.Out_as[selOut][SETTING_OUT_DAYTIME]); break;
-        case Menu::MENU_OUT_OFFSET+1:  enableEditMode(&WB.Out_as[selOut][SETTING_OUT_OFFSET]); break;
-        case Menu::MENU_OUT_TESTRUN+1: enableEditMode(&WB.Out_as[selOut][SETTING_OUT_TESTRUN]); break;
+        case Menu::MENU_OUT_AMOUNT+1:  enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_AMOUNT]); break;
+        case Menu::MENU_OUT_CYCLE+1:   enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_CYCLE]); break;
+        case Menu::MENU_OUT_DAYTIME+1: enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_DAYTIME]); break;
+        case Menu::MENU_OUT_OFFSET+1:  enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_OFFSET]); break;
+        case Menu::MENU_OUT_TESTRUN+1: enableEditMode(&InputData_p.Wb_p->Out_as[selOut][SETTING_OUT_TESTRUN]); break;
       }
     break;
     case Menu::SETTINGS_TIME_MENU:
       switch(HmiData_s.Menu_s.SelectedIdx_u8) {
         case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-        case Menu::MENU_TIME_HOUR+1:     enableEditMode(&WB.Time_s.Hour_s); break;
-        case Menu::MENU_TIME_MINUTE+1:   enableEditMode(&WB.Time_s.Min_s); break;
-        case Menu::MENU_TIME_YEAR+1:     enableEditMode(&WB.Time_s.Year_s); break;
-        case Menu::MENU_TIME_MONTH+1:    enableEditMode(&WB.Time_s.Month_s); break;
-        case Menu::MENU_TIME_DAY+1:      enableEditMode(&WB.Time_s.Day_s); break;
+        case Menu::MENU_TIME_HOUR+1:     enableEditMode(&InputData_p.Wb_p->Time_s.Hour_s); break;
+        case Menu::MENU_TIME_MINUTE+1:   enableEditMode(&InputData_p.Wb_p->Time_s.Min_s); break;
+        case Menu::MENU_TIME_YEAR+1:     enableEditMode(&InputData_p.Wb_p->Time_s.Year_s); break;
+        case Menu::MENU_TIME_MONTH+1:    enableEditMode(&InputData_p.Wb_p->Time_s.Month_s); break;
+        case Menu::MENU_TIME_DAY+1:      enableEditMode(&InputData_p.Wb_p->Time_s.Day_s); break;
       }
     break;
     case Menu::SETTINGS_DISPLAY_MENU: 
         switch(HmiData_s.Menu_s.SelectedIdx_u8) {
             case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-            case Menu::MENU_DISPLAY_SCREENSAVER+1: enableEditMode(&WB.Display_s.ScreenSaver_s); break;
-            case Menu::MENU_DISPLAY_STANDBY+1:     enableEditMode(&WB.Display_s.Sleep_s); break;
+            case Menu::MENU_DISPLAY_SCREENSAVER+1: enableEditMode(&InputData_p.Wb_p->Display_s.ScreenSaver_s); break;
+            case Menu::MENU_DISPLAY_STANDBY+1:     enableEditMode(&InputData_p.Wb_p->Display_s.Sleep_s); break;
         }
     break;
     case Menu::SETTINGS_OVERALL_OUTLET_MENU:
         switch (HmiData_s.Menu_s.SelectedIdx_u8) {
             case 0: HmiData_s.Menu_s.Selected_e = Menu::SETTINGS_MENU; break;
-            case Menu::MENU_OVERALL_OUTLET_FLOW_AMOUNT + 1: enableEditMode(&WB.Outlets_s.FlowAmount_s); break;
-            case Menu::MENU_OVERALL_OUTLET_ENABLE + 1:      enableEditMode(&WB.Outlets_s.Enable_s); break;
+            case Menu::MENU_OVERALL_OUTLET_FLOW_AMOUNT + 1: enableEditMode(&InputData_p.Wb_p->Outlets_s.FlowAmount_s); break;
+            case Menu::MENU_OVERALL_OUTLET_ENABLE + 1:      enableEditMode(&InputData_p.Wb_p->Outlets_s.Enable_s); break;
         }
     break;
     default: break;
@@ -524,13 +525,15 @@ void Display_Main(DISPLAY_MODE displayMode_e) {
     KeyPad_Main(); /* get key in the display loop otherwise it ll stuck */
 }
 
-void Display_Init(TimeType* time_p) {
+void Display_Init(WateringBoy_DataType *wb, TimeType* time_p) {
     DEBUG("D:I");
     Display::Init();
     HmiData_s.Menu_s.SelectedIdx_u8 = Menu::MENU_MAIN_OUTPUT;
     HmiData_s.Menu_s.Selected_e = Menu::MAIN_MENU;
     HmiData_s.KeyPad_s.Key_e = KEY_NONE;
     InputData_p.Time_p = time_p;
+    InputData_p.Wb_p = wb;
+
     showMainMenu();// Names::MainMenu, (uint8_t)Menu::MENU_MAIN_MAX, Names::Headline, false);
 
     Pins_Init();

@@ -3,6 +3,7 @@
 #include "types.h" /* is debugging enabled */
 
 //#define DEBUG_ENABLED
+#define FIRST_RUN false /* disable after first upload!! */
 
 #define SERIAL_BAUD_9600 9600
 #define SERIAL_BAUD_115200 115200
@@ -10,6 +11,7 @@
 #define CLAMP(val, min, max) val = ((val)<(min)?(min):((val)>(max)?(max):(val)))
 
 #define EXPONENTIAL_FILTER(last, new, alpha) last=(((last * alpha) + new * (1.0 - alpha)))
+#define IS_ENABLED(flag) (flag == true)
 
 #ifdef DEBUG_ENABLED
     #define DEBUG_INIT(baudrate)    Serial.begin(baudrate)

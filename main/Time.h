@@ -3,7 +3,7 @@
 
 #include "DS3231.h"
 #include "utils.h"
-#include "types.h"
+#include "types.h" 
 
 /*************************************************/
 /*         CONSTANT DEFINES                      */
@@ -34,9 +34,8 @@ typedef struct TimeType_Tag {
 /*************************************************/
 static void PrintTime(TimeType* t);
 
-#ifdef FIRST_RUN
 static void parseCompileTime(TimeType* t);
-#endif
+
 /*************************************************/
 /*         GLOBAL FUNCTION DECLARATION           */
 /*************************************************/
@@ -55,7 +54,6 @@ void PrintTime(TimeType* t) {
     DEBUG(totalBuff);
 }
 
-#ifdef FIRST_RUN
 void parseCompileTime(TimeType* t) {
     char s_month[5];
     const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
@@ -66,17 +64,16 @@ void parseCompileTime(TimeType* t) {
     DEBUG((strstr(month_names, s_month) - month_names));
     sscanf(__TIME__, "%2hhd %*c %2hhd %*c %2hhd", &t->hour, &t->minute, &t->second);
 }
-#endif
 /*************************************************/
 /*         GLOBAL FUNCTION DEFINITIONS            */
 /*************************************************/
 void Time_Init(TimeType& time) {
     Wire.begin();
     time.temperature = Clock.getTemperature();
-    #if defined(FIRST_RUN)
+    if (IS_ENABLED(FIRST_RUN)) {
         parseCompileTime(&time);
         SetTime(&time);
-    #endif
+    }
     PrintTime(&time);
 }
 

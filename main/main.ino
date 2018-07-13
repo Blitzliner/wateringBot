@@ -4,19 +4,24 @@
 #include "utils.h"
 #include "control.h"
 
+/*************************************************/
+/*         LOCAL VARIABLE DECLARATION            */
+/*************************************************/
+static WateringBoy_DataType WB;
 static TimeType time;
-DISPLAY_MODE DisplayMode_e;
+static DISPLAY_MODE DisplayMode_e;
 
 void setup() {
     DEBUG_INIT(SERIAL_BAUD_115200);
-    Display_Init(&time);    /* set up the main menu and pass a pointer to the time to it */  
+    Display_Init(&WB, &time);    /* set up the main menu and pass a pointer to the time to it */
     Time_Init(time);        /* build up connection to rtc */
-    NVM::Setting_Init(&time);    /* set default values, names, .. */
-    #if defined(FIRST_RUN)
-        NVM::SetSettings(); /* save all default values to eeprom */
-    #else
-        NVM::GetAllValues(); /* read data from eeprom and overwrite default values */
-    #endif  
+    NVM::Setting_Init(&WB, &time);    /* set default values, names, .. */
+    
+    if (IS_ENABLED(FIRST_RUN))
+        NVM::WriteAllValues(&WB); /* save all default values to eeprom */
+    else 
+        NVM::GetAllValues(&WB); /* read data from eeprom and overwrite default values */
+
     Control_Init(&time);
     DisplayMode_e = DISPLAY_NORMAL;
 }
@@ -33,7 +38,7 @@ void loop() {
             if (   (DisplayMode_e == DISPLAY_SCREENSAVER)
                 || (DisplayMode_e == DISPLAY_INIT)) {
                 DisplayMode_e = DISPLAY_NORMAL;
-                Display_Init(&time); /* start with start screen */
+                Display_Init(&WB, &time); /* start with start screen */
             }
             else if (DisplayMode_e == DISPLAY_STANDBY) {
                 DisplayMode_e = DISPLAY_INIT;

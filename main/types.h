@@ -6,7 +6,6 @@
 /*************************************************/
 /*           CONSTANT DECLARATION                */
 /*************************************************/
-//#define FIRST_RUN /* disable after first upload!! */
 #define CHARS_MAX 10
 
 /*************************************************/
@@ -64,11 +63,6 @@ typedef struct WateringBoy_DataType {
   TimeValueType Time_s;
   OutletsType Outlets_s;
 } WateringBoy_DataType;
-
-/*************************************************/
-/*         LOCAL VARIABLE DECLARATION            */
-/*************************************************/
-WateringBoy_DataType WB;
 
 
 #endif /*TYPES_H*/
