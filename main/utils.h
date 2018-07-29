@@ -4,6 +4,7 @@
 
 //#define DEBUG_ENABLED
 #define FIRST_RUN false /* disable after first upload!! */
+#define TEST_RUN false
 
 #define SERIAL_BAUD_9600 9600
 #define SERIAL_BAUD_115200 115200

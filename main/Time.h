@@ -96,6 +96,33 @@ void GetTime(TimeType *t) {
   t->month = Clock.getMonth(Century); 
   t->day = Clock.getDate(); 
   EXPONENTIAL_FILTER(t->temperature, Clock.getTemperature(), TEMPERATURE_FILTER);
+
+  if (IS_ENABLED(TEST_RUN)) {
+      /* wait for 10 seconds to start time ramps */
+      static uint8_t hour = 16;
+      static uint8_t min = 59;
+      static uint8_t sec = 0;
+      static uint32_t lastSec = millis();
+      if (millis() > 10000) {
+          /* 100 ms is now a second */
+          if (millis() - lastSec >= 100) {
+              sec++;
+              lastSec = millis();
+              if (sec >= 60) {
+                  min++;
+                  sec = 0;
+              }
+              if (min >= 60) {
+                  hour++;
+                  min = 0;
+              }
+          }
+          t->hour = hour;
+          t->minute = min;
+          t->second = sec;
+      }
+      
+  }
 }
 
 #endif

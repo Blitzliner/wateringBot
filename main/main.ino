@@ -27,37 +27,44 @@ void setup() {
 }
 
 void loop() {
-    static uint32_t lastTimeKeyPress_u32; 
+    static uint32_t lastTimeKeyPress_u32;
+    static int8_t currentOutlet_s8 = INVALID_VALVE_IDX;
+
     GetTime(&time);
     /* display loop */
     u8g.firstPage();  
     do {
-        if (HmiData_s.KeyPad_s.Key_e != KEY_NONE) {
-            /* save time when last user input came */
-            lastTimeKeyPress_u32 = millis()/1000;
-            if (   (DisplayMode_e == DISPLAY_SCREENSAVER)
-                || (DisplayMode_e == DISPLAY_INIT)) {
-                DisplayMode_e = DISPLAY_NORMAL;
-                Display_Init(&WB, &time); /* start with start screen */
-            }
-            else if (DisplayMode_e == DISPLAY_STANDBY) {
-                DisplayMode_e = DISPLAY_INIT;
-            }
-        } else {
-            /* no key are pressed. Check if it is time to display the screen saver */
-            int16_t deltaTime_s16 = (int16_t)(millis() / 1000 - lastTimeKeyPress_u32);
-            if (deltaTime_s16 > WB.Display_s.ScreenSaver_s.Value_s16) {
-                if (deltaTime_s16 > WB.Display_s.Sleep_s.Value_s16) {
-                    DisplayMode_e = DISPLAY_STANDBY;
-                } else {
-                    DisplayMode_e = DISPLAY_SCREENSAVER;
+        if (0 <= currentOutlet_s8) { 
+            DisplayMode_e = DISPLAY_WATERING;
+        } else { 
+            if (HmiData_s.KeyPad_s.Key_e != KEY_NONE) {
+                /* save time when last user input came */
+                lastTimeKeyPress_u32 = millis()/1000;
+                if (   (DisplayMode_e == DISPLAY_SCREENSAVER)
+                    || (DisplayMode_e == DISPLAY_INIT)) {
+                    DisplayMode_e = DISPLAY_NORMAL;
+                    Display_Init(&WB, &time); /* start with start screen */
+                }
+                else if (DisplayMode_e == DISPLAY_STANDBY) {
+                    DisplayMode_e = DISPLAY_INIT;
+                }
+            } else {
+                /* no key are pressed. Check if it is time to display the screen saver */
+                int16_t deltaTime_s16 = (int16_t)(millis() / 1000 - lastTimeKeyPress_u32);
+                if (deltaTime_s16 > WB.Display_s.ScreenSaver_s.Value_s16) {
+                    if (deltaTime_s16 > WB.Display_s.Sleep_s.Value_s16) {
+                        DisplayMode_e = DISPLAY_STANDBY;
+                    } else {
+                        DisplayMode_e = DISPLAY_SCREENSAVER;
+                    }
                 }
             }
         }
+
         Display_Main(DisplayMode_e);
     } while(u8g.nextPage());
   
-  Control_Main(&WB);
+    currentOutlet_s8 = Control_Main(&WB);
 }
 
 

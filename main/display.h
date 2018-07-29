@@ -35,20 +35,31 @@ typedef struct Menu_Tag {
     Menu::Menu_Enum Selected_e;    
 } Menu_Type;
 
+typedef enum DISPLAY_MODE { 
+    DISPLAY_NORMAL, 
+    DISPLAY_SCREENSAVER, 
+    DISPLAY_STANDBY, 
+    DISPLAY_WATERING, 
+    DISPLAY_INIT 
+} DISPLAY_MODE;
+
 typedef struct HMI_Tag {
     Menu_Type Menu_s;
     boolean EditMode_bo;
     ValueType* CurrentValue_p;
     uint8_t overviewNrDays_u8 = 3;
     KeyPad_Type KeyPad_s;
+    int8_t CurrentOutlet_s8;
+    uint16_t TotalMilliliter_u16;
+    uint16_t CurrentAmount_u16;
+    DISPLAY_MODE DisplayMode_e;
 } HMI_Type;
 
 typedef struct InputData_Tag {
-    TimeType* Time_p; 
+    TimeType *Time_p; 
     WateringBoy_DataType *Wb_p;
 } InputData_Type;
 
-enum DISPLAY_MODE { DISPLAY_NORMAL, DISPLAY_SCREENSAVER, DISPLAY_STANDBY, DISPLAY_INIT };
 
 /*************************************************/
 /*         LOCAL VARIABLE DECLARATION            */
@@ -67,6 +78,7 @@ static void ShowCursor_Main(void);
 static void showOverview(void);
 static void showValue(uint8_t posX, uint8_t posY, ValueType* value);
 static void showDisplayDetail(void);
+static void showCurrentWateringStatus(void);
 static void showOverallOutletDetail(void);
 static void showTimeDetail(void);
 static void showOutletDetail(uint8_t out);
@@ -84,6 +96,7 @@ void ISR_PRESS(void);
 void Display_Init(TimeType* time_p);
 void Display_Main(DISPLAY_MODE displayMode_e);
 void ScreenSaver_Main(TimeType* time_p);
+void DisplayUpdateWatering(int8_t currentOutlet, uint16_t totalMilliliter_u16, uint16_t currentAmount_u16);
 
 /*************************************************/
 /*         LOCAL FUNCTION DEFINITIONS            */
@@ -173,6 +186,16 @@ static void showTimeDetail(void) {
   showValue(HmiData_s.Menu_s.X_u8, Display::LINE_5, &InputData_p.Wb_p->Time_s.Year_s);
   showValue(HmiData_s.Menu_s.X_u8, Display::LINE_6, &InputData_p.Wb_p->Time_s.Month_s);
   showValue(HmiData_s.Menu_s.X_u8, Display::LINE_7, &InputData_p.Wb_p->Time_s.Day_s);
+}
+
+static void showCurrentWateringStatus(void) {
+    char str[20];
+    uint8_t percent_u8 = 100.0 * ((float)(HmiData_s.CurrentAmount_u16 / (float)HmiData_s.TotalMilliliter_u16 + 0.001));
+    Display::Print(0, 1, Names::Headline, 1, 0);
+    sprintf(str, "%s %d: %3d %%", Names::Menu::Outlet, HmiData_s.CurrentOutlet_s8 + 1, percent_u8);
+    Display::Print(0, 2, str, 1, 0);
+    sprintf(str, "%4d/%4d ml", HmiData_s.TotalMilliliter_u16, HmiData_s.CurrentAmount_u16);
+    Display::Print(0, 3, str, 1, 0);
 }
 
 static void showDisplayDetail(void) {
@@ -282,7 +305,7 @@ static void Pins_Init(void) {
 
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), ISR_A, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_PRESS), ISR_PRESS, CHANGE);
-  DEBUG("P:i");
+  DEBUG("Pi");
 }
 
 static void KeyPad_Main() {
@@ -320,8 +343,8 @@ static void KeyPad_Main() {
 
 void keyCenterEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) return;
-  DEBUG("K:C");
-  DEBUG("M:"); DEBUG_VALUE(HmiData_s.Menu_s.SelectedIdx_u8);
+  DEBUG("KC");
+  DEBUG("M"); DEBUG_VALUE(HmiData_s.Menu_s.SelectedIdx_u8);
   uint8_t selOut;
   ValueType *editVal_p = NULL;
 
@@ -406,7 +429,7 @@ void keyCenterEvent() {
   }
 
   HmiData_s.KeyPad_s.Clear_bo = false;
-  DEBUG("M:"); DEBUG_VALUE((uint8_t)HmiData_s.Menu_s.Selected_e);
+  DEBUG("M"); DEBUG_VALUE((uint8_t)HmiData_s.Menu_s.Selected_e);
 }
 
 void enableEditMode(ValueType* val) {
@@ -414,7 +437,7 @@ void enableEditMode(ValueType* val) {
   if (HmiData_s.EditMode_bo == true) {
     HmiData_s.EditMode_bo = false;
     if (lastValue != val->Value_s16) { /* save to eeprom if it has been changed */
-        DEBUG("NVM:S"); DEBUG_VALUE(val->Value_s16);
+        DEBUG("NVMS"); DEBUG_VALUE(val->Value_s16);
       NVM::SetValue(val);
     }
   } else {
@@ -426,9 +449,9 @@ void enableEditMode(ValueType* val) {
 
 void keyDownEvent() {  
   if (HmiData_s.KeyPad_s.Clear_bo == false) return; 
-  DEBUG("K:D");
+  DEBUG("KD");
   if(HmiData_s.EditMode_bo == true) {
-    HmiData_s.CurrentValue_p->Value_s16 -= HmiData_s.CurrentValue_p->Step_s16;
+    HmiData_s.CurrentValue_p->Value_s16 += HmiData_s.CurrentValue_p->Step_s16;
     CLAMP(HmiData_s.CurrentValue_p->Value_s16, HmiData_s.CurrentValue_p->Min_s16, HmiData_s.CurrentValue_p->Max_s16);
   } else {
     HmiData_s.Menu_s.SelectedIdx_u8++; 
@@ -439,9 +462,9 @@ void keyDownEvent() {
 
 void keyUpEvent() {
   if (HmiData_s.KeyPad_s.Clear_bo == false) return;
-  DEBUG("K:U");
+  DEBUG("KU");
   if(HmiData_s.EditMode_bo == true) {
-    HmiData_s.CurrentValue_p->Value_s16 += HmiData_s.CurrentValue_p->Step_s16;
+    HmiData_s.CurrentValue_p->Value_s16 -= HmiData_s.CurrentValue_p->Step_s16;
     CLAMP(HmiData_s.CurrentValue_p->Value_s16, HmiData_s.CurrentValue_p->Min_s16, HmiData_s.CurrentValue_p->Max_s16);
   } else {
     if (HmiData_s.Menu_s.SelectedIdx_u8 > 0) {
@@ -454,7 +477,7 @@ void keyUpEvent() {
 
 void keyReleasedEvent() {
     if (HmiData_s.KeyPad_s.Clear_bo == false) {
-        DEBUG("K:R");
+        DEBUG("KR");
         HmiData_s.KeyPad_s.Clear_bo = true;
     }
 }
@@ -493,7 +516,9 @@ static void editValue(void) {
 /*         GLOBAL FUNCTION DEFINITIONS           */
 /*************************************************/
 void Display_Main(DISPLAY_MODE displayMode_e) {
-    switch (displayMode_e) {
+    HmiData_s.DisplayMode_e = displayMode_e;
+    static boolean standbyActive_bo = false;
+    switch (HmiData_s.DisplayMode_e) {
     case DISPLAY_NORMAL: 
         switch (HmiData_s.KeyPad_s.Key_e) {
             case KEY_CENTER:  keyCenterEvent(); break;
@@ -509,26 +534,36 @@ void Display_Main(DISPLAY_MODE displayMode_e) {
         break;
 
     case DISPLAY_SCREENSAVER:
-        DEBUG("D:Sa");
+        DEBUG("DSa");
         HmiData_s.EditMode_bo = false;
         ScreenSaver_Main(InputData_p.Time_p); 
     break;
     case DISPLAY_STANDBY: 
-        DEBUG("D:Sb");
+        DEBUG("DSb");
         HmiData_s.EditMode_bo = false;
         Display::Sleep();
+        standbyActive_bo = true;
     break;
     case DISPLAY_INIT:
-        DEBUG("D:i");
+        DEBUG("Di");
         Display::Awake();
-
+        standbyActive_bo = false;
+        break;
+    case DISPLAY_WATERING:
+        DEBUG("Dw");
+        if (true == standbyActive_bo) {
+            Display::Awake();
+            standbyActive_bo = false;
+        }
+        showCurrentWateringStatus();
+        break;
     }
 
     KeyPad_Main(); /* get key in the display loop otherwise it ll stuck */
 }
 
 void Display_Init(WateringBoy_DataType *wb, TimeType* time_p) {
-    DEBUG("D:I");
+    DEBUG("DI");
     Display::Init();
     HmiData_s.Menu_s.SelectedIdx_u8 = Menu::MENU_MAIN_OUTPUT;
     HmiData_s.Menu_s.Selected_e = Menu::MAIN_MENU;
@@ -536,7 +571,16 @@ void Display_Init(WateringBoy_DataType *wb, TimeType* time_p) {
     InputData_p.Time_p = time_p;
     InputData_p.Wb_p = wb;
 
-    showMainMenu();// Names::MainMenu, (uint8_t)Menu::MENU_MAIN_MAX, Names::Headline, false);
+    showMainMenu();
 
     Pins_Init();
+}
+
+void DisplayUpdateWatering(int8_t currentOutlet, uint16_t totalMilliliter_u16, uint16_t currentAmount_u16)
+{
+    DEBUG("DW");
+    HmiData_s.DisplayMode_e = DISPLAY_WATERING;
+    HmiData_s.CurrentOutlet_s8 = currentOutlet;
+    HmiData_s.TotalMilliliter_u16 = totalMilliliter_u16;
+    HmiData_s.CurrentAmount_u16 = currentAmount_u16;
 }

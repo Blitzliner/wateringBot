@@ -76,8 +76,8 @@ namespace Names {
         const char Settings[] = "Settings";
         const char Time[] = "Time";
         const char Display[] = "Display";
-        const char Outlets[] = "Outlets";
-        const char Outlet[] = "Outlet";
+        const char Outlets[] = "Valves";
+        const char Outlet[] = "Valve";
         const char Back[] = "back";
         const char Arrow[] = ">";
         const char Divide[] = "/";
