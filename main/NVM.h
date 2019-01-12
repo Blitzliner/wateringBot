@@ -114,39 +114,39 @@ namespace NVM
     }
 
     static void SettingDisplay_Init(WateringBoy_DataType* wb_p) {
-        SetSetting(&wb_p->Display_s.ScreenSaver_s, 10, 1, 5, 60, Names::Unit::Second, Names::Setting::ScreenSaver, 64);
-        SetSetting(&wb_p->Display_s.Sleep_s, 20, 5, 10, 3600, Names::Unit::Second, Names::Setting::Standby, 68);
+        SetSetting(&wb_p->Display_s.ScreenSaver_s, 15, 1, 5, 60, Names::Unit::Second, Names::Setting::ScreenSaver, 64);
+        SetSetting(&wb_p->Display_s.Sleep_s, 50, 5, 10, 3600, Names::Unit::Second, Names::Setting::Standby, 68);
     }
 
     static void SettingOverallOutlets_Init(WateringBoy_DataType* wb_p) {
-        SetSetting(&wb_p->Outlets_s.FlowAmount_s, 50, 1, 5, 200, Names::Unit::Flow, Names::Setting::FlowAmount, 72);
-        SetSetting(&wb_p->Outlets_s.Enable_s, 15, 1, 1, 15, Names::Unit::Second, Names::Setting::Enable, 74);
+        SetSetting(&wb_p->Outlets_s.FlowAmount_s, 8, 1, 1, 100, Names::Unit::Flow, Names::Setting::FlowAmount, 72);
+        SetSetting(&wb_p->Outlets_s.Enable_s, 1, 1, 1, 15, Names::Unit::Binary, Names::Setting::Enable, 74);
     }
 
     static void SettingOutlets_Init(WateringBoy_DataType* wb_p) {
         /* Outlet 1 */
-        SetSetting(&wb_p->Out_as[WATER_OUTLET_1][SETTING_OUT_AMOUNT], 200, 50, 10, 1000, Names::Unit::Milliliter, Names::Setting::Amount, 0);
+        SetSetting(&wb_p->Out_as[WATER_OUTLET_1][SETTING_OUT_AMOUNT], 100, 10, 5, 500, Names::Unit::Milliliter, Names::Setting::Amount, 0);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_1][SETTING_OUT_CYCLE], 24, 3, 3, 5040, Names::Unit::Hour, Names::Setting::Cycle, 4);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_1][SETTING_OUT_DAYTIME], 17, 1, 0, 23, Names::Unit::Clock, Names::Setting::Daytime, 8);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_1][SETTING_OUT_OFFSET], 0, 20, 0, 500, Names::Unit::Milliliter, Names::Setting::Offset, 12);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_1][SETTING_OUT_TESTRUN], 0, 1, 0, 1, Names::Unit::NoUnit, Names::Setting::Testrun, NVM_INVALID_ADDRESS);
 
         /* Outlet 2 */
-        SetSetting(&wb_p->Out_as[WATER_OUTLET_2][SETTING_OUT_AMOUNT], 500, 50, 10, 1000, Names::Unit::Milliliter, Names::Setting::Amount, 16);
+        SetSetting(&wb_p->Out_as[WATER_OUTLET_2][SETTING_OUT_AMOUNT], 50, 10, 5, 500, Names::Unit::Milliliter, Names::Setting::Amount, 16);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_2][SETTING_OUT_CYCLE], 24, 3, 3, 5040, Names::Unit::Hour, Names::Setting::Cycle, 20);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_2][SETTING_OUT_DAYTIME], 17, 1, 0, 23, Names::Unit::Clock, Names::Setting::Daytime, 24);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_2][SETTING_OUT_OFFSET], 0, 20, 0, 500, Names::Unit::Milliliter, Names::Setting::Offset, 28);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_2][SETTING_OUT_TESTRUN], 0, 1, 0, 1, Names::Unit::NoUnit, Names::Setting::Testrun, NVM_INVALID_ADDRESS);
 
         /* Outlet 3 */
-        SetSetting(&wb_p->Out_as[WATER_OUTLET_3][SETTING_OUT_AMOUNT], 300, 50, 10, 1000, Names::Unit::Milliliter, Names::Setting::Amount, 32);
+        SetSetting(&wb_p->Out_as[WATER_OUTLET_3][SETTING_OUT_AMOUNT], 150, 10, 5, 500, Names::Unit::Milliliter, Names::Setting::Amount, 32);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_3][SETTING_OUT_CYCLE], 48, 3, 3, 5040, Names::Unit::Hour, Names::Setting::Cycle, 36);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_3][SETTING_OUT_DAYTIME], 17, 1, 0, 23, Names::Unit::Clock, Names::Setting::Daytime, 40);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_3][SETTING_OUT_OFFSET], 0, 20, 0, 500, Names::Unit::Milliliter, Names::Setting::Offset, 44);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_3][SETTING_OUT_TESTRUN], 0, 1, 0, 1, Names::Unit::NoUnit, Names::Setting::Testrun, NVM_INVALID_ADDRESS);
 
         /* Outlet 4 */
-        SetSetting(&wb_p->Out_as[WATER_OUTLET_4][SETTING_OUT_AMOUNT], 200, 50, 10, 1000, Names::Unit::Milliliter, Names::Setting::Amount, 48);
+        SetSetting(&wb_p->Out_as[WATER_OUTLET_4][SETTING_OUT_AMOUNT], 100, 10, 5, 500, Names::Unit::Milliliter, Names::Setting::Amount, 48);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_4][SETTING_OUT_CYCLE], 168, 3, 3, 5040, Names::Unit::Hour, Names::Setting::Cycle, 52);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_4][SETTING_OUT_DAYTIME], 17, 1, 0, 23, Names::Unit::Clock, Names::Setting::Daytime, 56);
         SetSetting(&wb_p->Out_as[WATER_OUTLET_4][SETTING_OUT_OFFSET], 0, 20, 0, 500, Names::Unit::Milliliter, Names::Setting::Offset, 60);
