@@ -112,6 +112,7 @@ namespace Names {
         const char Year[] = "a";
         const char Flow[] = "ml/s";
         const char Clock[] = "Uhr";
+        const char Binary[] = "Bin";
     }
 }
 

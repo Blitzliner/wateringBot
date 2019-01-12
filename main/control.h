@@ -75,20 +75,23 @@ void _controlPins(const int8_t currentOutlet, const boolean mutexPump) {
 
 void _checkOutlets(WateringBoy_DataType* data, int8_t& lastIdx, bool& mutexPump, bool& testRun) {
     for (uint8_t idx_u8 = 0; idx_u8 < WATER_OUTLET_MAX; idx_u8++) {
-    /* first run ever */
-        if (_lastRun[idx_u8] == 0) {
-        /* check for right time and if pump is not bussy */
-            if (   (_t->hour == data->Out_as[idx_u8][SETTING_OUT_DAYTIME].Value_s16)
-                && (mutexPump == false)) {
-                lastIdx = idx_u8;
-                DEBUG("V1");
-            }
-        } else { /* normal run */
-            if (   ((_lastRun[idx_u8] + data->Out_as[idx_u8][SETTING_OUT_CYCLE].Value_s16*60*60) == (millis()/1000))
-                && (mutexPump == false)) {
-                lastIdx = idx_u8;
-                DEBUG("V2");
-            }
+        /* check if valve is enabled*/
+        if (data->Outlets_s.Enable_s.Value_s16 & (1 << idx_u8)) {
+          /* first run ever */
+          if (_lastRun[idx_u8] == 0) {
+          /* check for right time and if pump is not busy */
+              if (   (_t->hour == data->Out_as[idx_u8][SETTING_OUT_DAYTIME].Value_s16)
+                  && (mutexPump == false)) {
+                  lastIdx = idx_u8;
+                  DEBUG("V1");
+              }
+          } else { /* normal run */
+              if (   ((_lastRun[idx_u8] + data->Out_as[idx_u8][SETTING_OUT_CYCLE].Value_s16*60*60) == (millis()/1000))
+                  && (mutexPump == false)) {
+                  lastIdx = idx_u8;
+                  DEBUG("V2");
+              }
+          }
         }
         /*test run is enabled*/
         if (   (data->Out_as[idx_u8][SETTING_OUT_TESTRUN].Value_s16 == 1)

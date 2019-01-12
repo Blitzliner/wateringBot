@@ -3,7 +3,7 @@
 #include "types.h" /* is debugging enabled */
 
 //#define DEBUG_ENABLED
-#define FIRST_RUN false /* disable after first upload!! */
+#define FIRST_RUN true /* disable after first upload!! */
 #define TEST_RUN false
 
 #define SERIAL_BAUD_9600 9600
