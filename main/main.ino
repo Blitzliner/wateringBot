@@ -51,7 +51,8 @@ void loop() {
             } else {
                 /* no key are pressed. Check if it is time to display the screen saver */
                 int16_t deltaTime_s16 = (int16_t)(millis() / 1000 - lastTimeKeyPress_u32);
-                if (deltaTime_s16 > WB.Display_s.ScreenSaver_s.Value_s16) {
+                if (   (deltaTime_s16 > WB.Display_s.ScreenSaver_s.Value_s16)
+                    && (INVALID_VALVE_IDX != currentOutlet_s8)) {
                     if (deltaTime_s16 > WB.Display_s.Sleep_s.Value_s16) {
                         DisplayMode_e = DISPLAY_STANDBY;
                     } else {
